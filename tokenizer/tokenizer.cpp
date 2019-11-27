@@ -247,7 +247,7 @@ namespace miniplc0 {
 
 			case SEMICOLON_STATE: {
 				unreadLast();
-				return std::make_pair(std::make_optional<Token>(TokenType::SEMICOLON, ':', pos, currentPos()), std::optional<CompilationError>());
+				return std::make_pair(std::make_optional<Token>(TokenType::SEMICOLON, ';', pos, currentPos()), std::optional<CompilationError>());
 			}
 
 			case LEFTBRACKET_STATE: {
