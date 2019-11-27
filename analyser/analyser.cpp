@@ -341,6 +341,34 @@ namespace miniplc0 {
 	// 需要补全
 	std::optional<CompilationError> Analyser::analyseItem() {
 		// 可以参考 <表达式> 实现
+		// <因子>
+		auto err = analyseFactor();
+		if (err.has_value())
+			return err;
+
+		// { <乘法型运算符><因子> }
+		while (true) {
+			//预读
+			auto next = nextToken();
+			if (!next.has_value())
+				return {};
+			auto type = next.value().GetType();
+			if(type != TokenType::MULTIPLICATION_SIGN && type != TokenType::DIVISION_SIGN){
+				unreadToken();
+				return {};
+			}
+
+			// <因子>
+			err = analyseFactor();
+			if(err.has_value())
+				return err;
+			
+			// 根据结果生成指令
+			if(type == TokenType::MULTIPLICATION_SIGN)
+				_instructions.emplace_back(Operation::MUL, 0);
+			else if (type == TokenType::DIVISION_SIGN)
+				_instructions.emplace_back(Operation::DIV, 0);
+		}
 		return {};
 	}
 
