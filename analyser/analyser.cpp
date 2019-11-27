@@ -120,6 +120,8 @@ namespace miniplc0 {
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
 			if (isDeclared(next.value().GetValueString()))//重复声明
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
+			 ///这里有一步将未初始化变量放在栈上，而且不能被消掉
+			_instructions.emplace_back(Operation::LIT,0);
 		// 变量可能没有初始化，仍然需要一次预读
 			next = nextToken();
 		// '='
@@ -132,8 +134,6 @@ namespace miniplc0 {
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrInvalidVariableDeclaration);
 			else if( next.value().GetType() == TokenType::SEMICOLON ){//未赋值直接';'
 				addUninitializedVariable(varname.value());
-				 ///这里有一步将未初始化变量放在栈上，而且不能被消掉
-				_instructions.emplace_back(Operation::LIT,0);
 				continue;
 			}
 			///else must be'='
