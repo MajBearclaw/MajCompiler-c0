@@ -12,9 +12,9 @@ namespace miniplc0 {
 		NULL_TOKEN,
 		UNSIGNED_INTEGER,
 		IDENTIFIER,
-		BEGIN,
-		END,
-		VAR,
+		// BEGIN,
+		// END,
+		// VAR,
 		CONST,
 		PRINT,
 		PLUS_SIGN,
@@ -25,6 +25,18 @@ namespace miniplc0 {
 		SEMICOLON,
 		LEFT_BRACKET,
 		RIGHT_BRACKET
+
+		//c0 add
+		,
+		
+		SPECIFIER,	//void, int, {char, double}
+		STRUCT,
+		IFELSE,		
+		LABELED,	// {switch' |'case'   |'default'}
+		LOOP,		//'while',   {'for','do'}
+		JUMP,		//return, {break, continue}
+		SCAN
+					//{}表示未实现
 	};
 
 	class Token final {

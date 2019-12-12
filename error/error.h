@@ -23,9 +23,9 @@ namespace miniplc0 {
 		ErrEOF,
 		ErrInvalidInput,
 		ErrInvalidIdentifier,
-		ErrIntegerOverflow, // int32_t overflow.
-		ErrNoBegin,
-		ErrNoEnd,
+		// ErrIntegerOverflow, // int64_t overflow.
+		// ErrNoBegin,
+		// ErrNoEnd,
 		ErrNeedIdentifier,
 		ErrConstantNeedValue,
 		ErrNoSemicolon,
@@ -37,6 +37,10 @@ namespace miniplc0 {
 		ErrNotInitialized,
 		ErrInvalidAssignment,
 		ErrInvalidPrint
+
+		,
+		ErrFrontZero,			//十进制整数不能有前导0
+		ErrInvalidHexInteger	//只有0x|0X，缺少后面的数值
 	};
 
 	class CompilationError final{

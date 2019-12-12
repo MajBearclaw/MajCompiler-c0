@@ -27,15 +27,15 @@ namespace fmt {
 			case miniplc0::ErrInvalidIdentifier:
 				name = "Identifier is invalid";
 				break;
-			case miniplc0::ErrIntegerOverflow:
-				name = "The integer is too big(int64_t).";
-				break;
-			case miniplc0::ErrNoBegin:
-				name = "The program should start with 'begin'.";
-				break;
-			case miniplc0::ErrNoEnd:
-				name = "The program should end with 'end'.";
-				break;
+			// case miniplc0::ErrIntegerOverflow:
+			// 	name = "The integer is too big(int64_t).";
+			// 	break;
+			// case miniplc0::ErrNoBegin:
+			// 	name = "The program should start with 'begin'.";
+			// 	break;
+			// case miniplc0::ErrNoEnd:
+			// 	name = "The program should end with 'end'.";
+			// 	break;
 			case miniplc0::ErrNeedIdentifier:
 				name = "Need an identifier here.";
 				break;
@@ -68,6 +68,13 @@ namespace fmt {
 				break;
 			case miniplc0::ErrInvalidPrint:
 				name = "The output statement is invalid.";
+				break;
+			
+			case miniplc0::ErrFrontZero:
+				name = "The decimal Integer should not have front-zero.";
+				break;
+			case miniplc0::ErrInvalidHexInteger:
+				name = "The hex Integer should have value after '0X'|'0x'.";
 				break;
 			}
 			return format_to(ctx.out(), name);
