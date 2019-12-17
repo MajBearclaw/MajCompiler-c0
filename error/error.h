@@ -5,7 +5,7 @@
 #include <utility>
 #include <iostream>
 
-namespace miniplc0 {
+namespace majc0 {
 
 	inline void DieAndPrint(std::string condition) {
 		std::cout << "Exception: " <<  condition << "\n";
@@ -39,8 +39,16 @@ namespace miniplc0 {
 		ErrInvalidPrint
 
 		,
+		ErrNeedLeftBracket,		//need '('
+		ErrNeedRightBracket,	//need ')'
+		ErrNeedLeftBrace,		//need '{'
+		ErrNeedRightBrace,		//need '}'
+		ErrVoidInVar,			//把void用在了变量声明
 		ErrFrontZero,			//十进制整数不能有前导0
-		ErrInvalidHexInteger	//只有0x|0X，缺少后面的数值
+		ErrInvalidHexInteger,	//只有0x|0X，缺少后面的数值
+		ErrNeedTypeSpecifier,	//const 后面需要类型修饰符
+		ErrUnimplemented,			//未实现的功能
+		ErrInvalidStatement		//无效语句
 	};
 
 	class CompilationError final{

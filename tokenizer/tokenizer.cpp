@@ -3,7 +3,7 @@
 #include <cctype>
 #include <sstream>
 
-namespace miniplc0 {
+namespace majc0 {
 
 	std::pair<std::optional<Token>, std::optional<CompilationError>> Tokenizer::NextToken() {
 		if (!_initialized)
@@ -72,18 +72,18 @@ namespace miniplc0 {
 
 				// 使用了自己封装的判断字符类型的函数，定义于 tokenizer/utils.hpp
 				// see https://en.cppreference.com/w/cpp/string/byte/isblank
-				if (miniplc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
+				if (majc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
 					current_state = DFAState::INITIAL_STATE; // 保留当前状态为初始状态，此处直接break也是可以的
-				else if (!miniplc0::isprint(ch)) // control codes and backspace
+				else if (!majc0::isprint(ch)) // control codes and backspace
 					invalid = true;
-				else if (miniplc0::isdigit(ch)) // 读到的字符是数字
+				else if (majc0::isdigit(ch)) // 读到的字符是数字
 				{
 					if( (char)ch == '0'){
 						current_state = DFAState::ZERO_STATE;
 					}else
 						current_state = DFAState::UNSIGNED_INTEGER_STATE; // 切换到无符号整数的状态
 				}
-				else if (miniplc0::isalpha(ch)) // 读到的字符是英文字母
+				else if (majc0::isalpha(ch)) // 读到的字符是英文字母
 					current_state = DFAState::IDENTIFIER_STATE; // 切换到标识符的状态
 				else {
 					switch (ch) {
@@ -91,25 +91,17 @@ namespace miniplc0 {
 						current_state = DFAState::EQUAL_SIGN_STATE;
 						break;
 					case '-':
-						// 请填空：切换到减号的状态
 						current_state = DFAState::MINUS_SIGN_STATE;
 						break;
 					case '+':
-						// 请填空：切换到加号的状态
 						current_state = DFAState::PLUS_SIGN_STATE;
 						break;
 					case '*':
-						// 请填空：切换状态
 						current_state = DFAState::MULTIPLICATION_SIGN_STATE;
 						break;
 					case '/':
-						// 请填空：切换状态
 						current_state = DFAState::DIVISION_SIGN_STATE;
 						break;
-
-					///// 请填空：
-					///// 对于其他的可接受字符
-					///// 切换到对应的状态
 					case ';':
 						current_state = DFAState::SEMICOLON_STATE;
 						break;
@@ -118,6 +110,27 @@ namespace miniplc0 {
 						break;
 					case ')':
 						current_state = DFAState::RIGHTBRACKET_STATE;
+						break;
+					case '<':
+						current_state = DFAState::LEFT_ANGLE_BRACKET_STATE;
+						break;
+					case '>':
+						current_state = DFAState::RIGHT_ANGLE_BRACKET_STATE;
+						break;
+					case '{':
+						current_state = DFAState::LEFT_BRACE_STATE;
+						break;
+					case '}':
+						current_state = DFAState::RIGHT_BRACE_STATE;
+						break;
+					case '[':
+						current_state = DFAState::LEFT_SQUARE_BRACKET_STATE;
+						break;
+					case ']':
+						current_state = DFAState::RIGHT_SQUARE_BRACKET_STATE;
+						break;
+					case '!':
+						current_state = DFAState::EXCLAMATION_STATE;
 						break;
 					// 不接受的字符导致的不合法的状态
 					default:
@@ -149,9 +162,9 @@ namespace miniplc0 {
 				if( ch == 'x' || ch == 'X'){
 					current_state = DFAState::HEX_X_STATE;
 					ss << ch;
-				}else if (miniplc0::isdigit(ch))
+				}else if (majc0::isdigit(ch))
 					return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrFrontZero));
-				else if (miniplc0::isalpha(ch)){
+				else if (majc0::isalpha(ch)){
 					ss << ch;
 					current_state = DFAState::IDENTIFIER_STATE;
 				}else {
@@ -162,12 +175,11 @@ namespace miniplc0 {
 			}
 
 			case HEX_X_STATE: {
-				///////////////////////
 				if ( ! current_char.has_value())
 					return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrInvalidHexInteger));
 				
 				auto ch = current_char.value();
-				if (miniplc0::isdigit(ch) || miniplc0::isalpha(ch)){
+				if (majc0::isdigit(ch) || majc0::isalpha(ch)){
 					ss << ch;
 					current_state = DFAState::HEX_DIGIT_STATE;
 				}else 
@@ -188,10 +200,10 @@ namespace miniplc0 {
 				//get the value of current_char
 				auto ch = current_char.value();
 				// 如果读到的字符是数字，则存储读到的字符
-				if (miniplc0::isdigit(ch))
+				if (majc0::isdigit(ch))
 					ss << ch;
 				// 如果读到的是字母，则存储读到的字符，并切换状态到标识符
-				else if (miniplc0::isalpha(ch)){
+				else if (majc0::isalpha(ch)){
 					ss << ch;
 					current_state = DFAState::IDENTIFIER_STATE;
 				}
@@ -218,7 +230,7 @@ namespace miniplc0 {
 				//get the value of current_char
 				auto ch = current_char.value();
 				// 如果读到的字符是数字，则存储读到的字符
-				if (miniplc0::isdigit(ch) || miniplc0::isalpha(ch))
+				if (majc0::isdigit(ch) || majc0::isalpha(ch))
 					ss << ch;
 				// 如果读到的字符不是上述情况之一，则回退读到的字符，并解析已经读到的字符串为整数
 				else {
@@ -247,8 +259,10 @@ namespace miniplc0 {
 						return std::make_pair(std::make_optional<Token>(TokenType::SPECIFIER, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "struct")
 						return std::make_pair(std::make_optional<Token>(TokenType::STRUCT, ss.str(), pos, currentPos()), std::optional<CompilationError>());
-					else if( ss.str() == "if" || ss.str() == "else")
-						return std::make_pair(std::make_optional<Token>(TokenType::IFELSE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "if" )
+						return std::make_pair(std::make_optional<Token>(TokenType::IF, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "else")
+						return std::make_pair(std::make_optional<Token>(TokenType::ELSE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "switch" || ss.str() == "case" || ss.str() == "default")
 						return std::make_pair(std::make_optional<Token>(TokenType::LABELED, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "while" || ss.str() == "for" || ss.str() == "do")
@@ -264,7 +278,7 @@ namespace miniplc0 {
 				}
 				auto ch = current_char.value();
 				// 如果读到的是字符或字母，则存储读到的字符
-				if ( miniplc0::isdigit(ch) || miniplc0::isalpha(ch) )
+				if ( majc0::isdigit(ch) || majc0::isalpha(ch) )
 					ss << ch;
 				// 如果读到的字符不是上述情况之一，则回退读到的字符，并解析已经读到的字符串
 				else {
@@ -276,8 +290,10 @@ namespace miniplc0 {
 						return std::make_pair(std::make_optional<Token>(TokenType::SPECIFIER, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "struct")
 						return std::make_pair(std::make_optional<Token>(TokenType::STRUCT, ss.str(), pos, currentPos()), std::optional<CompilationError>());
-					else if( ss.str() == "if" || ss.str() == "else")
-						return std::make_pair(std::make_optional<Token>(TokenType::IFELSE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "if" )
+						return std::make_pair(std::make_optional<Token>(TokenType::IF, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "else" )
+						return std::make_pair(std::make_optional<Token>(TokenType::ELSE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "switch" || ss.str() == "case" || ss.str() == "default")
 						return std::make_pair(std::make_optional<Token>(TokenType::LABELED, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "while" || ss.str() == "for" || ss.str() == "do")
@@ -322,6 +338,15 @@ namespace miniplc0 {
 			}
 
 			case EQUAL_SIGN_STATE: {
+				if ( ! current_char.has_value())
+					return std::make_pair(std::make_optional<Token>(TokenType::EQUAL_SIGN, '=', pos, currentPos()), std::optional<CompilationError>());
+				auto ch = current_char.value();
+				if (ch == '='){
+					// ss << ch;
+					// current_state = DFAState::;
+					// break;
+					return std::make_pair(std::make_optional<Token>(TokenType::EQUAL_EQUAL, "==", pos, currentPos()), std::optional<CompilationError>());
+				}
 				unreadLast();
 				return std::make_pair(std::make_optional<Token>(TokenType::EQUAL_SIGN, '=', pos, currentPos()), std::optional<CompilationError>());
 			}
@@ -340,6 +365,65 @@ namespace miniplc0 {
 				unreadLast();
 				return std::make_pair(std::make_optional<Token>(TokenType::RIGHT_BRACKET, ')', pos, currentPos()), std::optional<CompilationError>());
 			}
+			case LEFT_ANGLE_BRACKET_STATE: {
+				if ( ! current_char.has_value())
+					return std::make_pair(std::make_optional<Token>(TokenType::LEFT_ANGLE_BRACKET, '<', pos, currentPos()), std::optional<CompilationError>());
+				auto ch = current_char.value();
+				if (ch == '='){
+					// ss << ch;
+					// current_state = DFAState::;
+					// break;
+					return std::make_pair(std::make_optional<Token>(TokenType::NOT_EQUAL, "<=", pos, currentPos()), std::optional<CompilationError>());
+				}
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::LEFT_ANGLE_BRACKET, '<', pos, currentPos()), std::optional<CompilationError>());
+			}
+			case RIGHT_ANGLE_BRACKET_STATE: {
+				if ( ! current_char.has_value())
+					return std::make_pair(std::make_optional<Token>(TokenType::RIGHT_ANGLE_BRACKET, '>', pos, currentPos()), std::optional<CompilationError>());
+				auto ch = current_char.value();
+				if (ch == '='){
+					// ss << ch;
+					// current_state = DFAState::;
+					// break;
+					return std::make_pair(std::make_optional<Token>(TokenType::GREATER_OR_EQUAL, ">=", pos, currentPos()), std::optional<CompilationError>());
+				}
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::RIGHT_ANGLE_BRACKET, '>', pos, currentPos()), std::optional<CompilationError>());
+			}
+			case LEFT_BRACE_STATE: {
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::LEFT_BRACE, '{', pos, currentPos()), std::optional<CompilationError>());
+			}
+			case RIGHT_BRACE_STATE: {
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::RIGHT_BRACE, '}', pos, currentPos()), std::optional<CompilationError>());
+			}
+			case LEFT_SQUARE_BRACKET_STATE: {
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::LEFT_SQUARE_BRACKET, '[', pos, currentPos()), std::optional<CompilationError>());
+			}
+			case RIGHT_SQUARE_BRACKET_STATE: {
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::RIGHT_SQUARE_BRACKET, ']', pos, currentPos()), std::optional<CompilationError>());
+			}
+			case EXCLAMATION_STATE: {
+				if ( ! current_char.has_value())
+					return std::make_pair(std::make_optional<Token>(TokenType::EXCLAMATION, '!', pos, currentPos()), std::optional<CompilationError>());
+				auto ch = current_char.value();
+				if (ch == '='){
+					// ss << ch;
+					// current_state = DFAState::NOT_EQUAL_SIGN_STATE;
+					// break;
+					return std::make_pair(std::make_optional<Token>(TokenType::NOT_EQUAL, '!=', pos, currentPos()), std::optional<CompilationError>());
+				}
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::EXCLAMATION, '!', pos, currentPos()), std::optional<CompilationError>());
+			}
+			case COMMA_STATE: {
+				unreadLast();
+				return std::make_pair(std::make_optional<Token>(TokenType::COMMA, ',', pos, currentPos()), std::optional<CompilationError>());
+			}
 								   // 预料之外的状态，如果执行到了这里，说明程序异常
 			default:
 				DieAndPrint("unhandled state.");
@@ -354,7 +438,7 @@ namespace miniplc0 {
 		switch (t.GetType()) {
 			case IDENTIFIER: {
 				auto val = t.GetValueString();
-				if (miniplc0::isdigit(val[0]))
+				if (majc0::isdigit(val[0]))
 					return std::make_optional<CompilationError>(t.GetStartPos().first, t.GetStartPos().second, ErrorCode::ErrInvalidIdentifier);
 				break;
 			}

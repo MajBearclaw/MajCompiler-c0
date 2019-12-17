@@ -12,7 +12,7 @@
 #include <vector>
 #include <string>
 
-namespace miniplc0 {
+namespace majc0 {
 
 	class Tokenizer final {
 	private:
@@ -32,9 +32,25 @@ namespace miniplc0 {
 			LEFTBRACKET_STATE,			//左括号
 			RIGHTBRACKET_STATE			//右括号
 			,
+
+			LEFT_ANGLE_BRACKET_STATE,
+			RIGHT_ANGLE_BRACKET_STATE,	// >
+			LEFT_BRACE_STATE,
+			RIGHT_BRACE_STATE,			// }
+			LEFT_SQUARE_BRACKET_STATE,
+			RIGHT_SQUARE_BRACKET_STATE,	// ]
+
+			EXCLAMATION_STATE,			// !
+			COMMA_STATE,				// ,
+
 			ZERO_STATE,
-			HEX_X_STATE,				//16进制xX
+			HEX_X_STATE,				// 16进制xX
 			HEX_DIGIT_STATE,
+
+			NOT_EQUAL_SIGN_STATE,			// !=
+			EQUAL_EQUAL_SIGN_STATE,			// ==
+			LESS_OR_EQUAL_SIGN_STATE,		// <=
+			GREATER_OR_EQUAL_SIGN_STATE,	// >=
 
 			// FLOATING_E_STATE,
 			// FLOATING_DOT_STATE,			//'.'

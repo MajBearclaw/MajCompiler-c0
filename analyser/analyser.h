@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <cstddef> // for std::size_t
 
-namespace miniplc0 {
+namespace majc0 {
 
 	class Analyser final {
 	private:
@@ -32,20 +32,19 @@ namespace miniplc0 {
 	private:
 		// 所有的递归子程序
 
-		// <程序>
+		// <程序> ,c0 use
 		std::optional<CompilationError> analyseProgram();
 		// <主过程>
 		std::optional<CompilationError> analyseMain();
 		// <常量声明>
 		std::optional<CompilationError> analyseConstantDeclaration();
-		// <变量声明>
-		std::optional<CompilationError> analyseVariableDeclaration();
-		// <语句序列>
-		std::optional<CompilationError> analyseStatementSequence();
+		
+		// // <语句序列>
+		// std::optional<CompilationError> analyseStatementSequence();
 		// <常表达式>
 		// 这里的 out 是常表达式的值
 		std::optional<CompilationError> analyseConstantExpression(int32_t& out);
-		// <表达式>
+		// <表达式> ,c0 use
 		std::optional<CompilationError> analyseExpression();
 		// <赋值语句>
 		std::optional<CompilationError> analyseAssignmentStatement();
@@ -55,6 +54,54 @@ namespace miniplc0 {
 		std::optional<CompilationError> analyseItem();
 		// <因子>
 		std::optional<CompilationError> analyseFactor();
+
+		/// c0 add
+		// <多重变量声明>::={<变量声明>}
+		std::optional<CompilationError> analyseVariableDeclarationMulti();
+		// <变量声明> ,c0 use
+		std::optional<CompilationError> analyseVariableDeclaration();
+		// <多重函数定义>::={<函数定义>}
+		std::optional<CompilationError> analyseFunctionDefinitionMulti();
+		// <函数定义>
+		std::optional<CompilationError> analyseFunctionDefinition();
+		// <类型修饰符>
+		std::optional<CompilationError> analyseTypeSpecifier();
+		// <初始化声明符表><init-declarator-list>
+		std::optional<CompilationError> analyseInitDeclaratorList(int32_t isConst);
+		// <初始化声明符><init-declarator>
+		std::optional<CompilationError> analyseInitDeclarator(int32_t isConst);
+		// <标识符>
+		std::optional<CompilationError> analyseIdentifier();
+		// // <初始器><initializer>
+		// std::optional<CompilationError> analyseInitializer();
+		// <加法类表达式><additive-expression>
+		std::optional<CompilationError> analyseAdditiveExpression();
+		// <乘法类表达式><multiplicative-expression>
+		std::optional<CompilationError> analyseMultiplicativeExpression();
+		// <强制类型转换表达式><cast-expression>
+		std::optional<CompilationError> analyseCastExpression();
+		// <一元表达式><unary-expression>
+		std::optional<CompilationError> analyseUnaryExpression();
+		// <基本表达式><primary-expression>
+		std::optional<CompilationError> analysePrimaryExpression();
+		// <函数调用><function-call>
+		std::optional<CompilationError> analyseFunctionCall();
+		// <表达式列表><expression-list>
+		std::optional<CompilationError> analyseExpressionList();
+		// <参数从句><parameter-clause>
+		std::optional<CompilationError> analyseParameterClause();
+		// <参数声明表><parameter-declaration-list>
+		std::optional<CompilationError> analyseParameterDeclarationList();
+		// <参数声明><parameter-declaration>
+		std::optional<CompilationError> analyseParameterDeclaration();
+		// <函数体><compound-statement>
+		std::optional<CompilationError> analyseCompoundStatement();
+		// <句子序列><statement-seq>
+		std::optional<CompilationError> analyseStatementSeq();
+		// <print-statement>
+		std::optional<CompilationError> analysePrintStatement();
+		// <scan-statement>
+		std::optional<CompilationError> analyseScanStatement();
 
 		// Token 缓冲区相关操作
 

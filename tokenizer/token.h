@@ -6,7 +6,7 @@
 #include <string>
 #include <cstdint>
 
-namespace miniplc0 {
+namespace majc0 {
 
 	enum TokenType {
 		NULL_TOKEN,
@@ -28,14 +28,29 @@ namespace miniplc0 {
 
 		//c0 add
 		,
-		
+		LEFT_ANGLE_BRACKET,
+		RIGHT_ANGLE_BRACKET,	// >
+		LEFT_BRACE,
+		RIGHT_BRACE,			// }
+		LEFT_SQUARE_BRACKET,
+		RIGHT_SQUARE_BRACKET,	// ]
+
+		EXCLAMATION,			// !
+		COMMA,					// ,
+
 		SPECIFIER,	//void, int, {char, double}
 		STRUCT,
-		IFELSE,		
+		IF,
+		ELSE,		
 		LABELED,	// {switch' |'case'   |'default'}
 		LOOP,		//'while',   {'for','do'}
 		JUMP,		//return, {break, continue}
-		SCAN
+		SCAN,
+
+		NOT_EQUAL,			// !=
+		EQUAL_EQUAL,		// ==
+		LESS_OR_EQUAL,		// <=
+		GREATER_OR_EQUAL,	// >=
 					//{}表示未实现
 	};
 
