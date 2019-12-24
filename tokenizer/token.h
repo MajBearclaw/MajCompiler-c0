@@ -6,7 +6,7 @@
 #include <string>
 #include <cstdint>
 
-namespace majc0 {
+namespace miniplc0 {
 
 	enum TokenType {
 		NULL_TOKEN,
@@ -43,8 +43,14 @@ namespace majc0 {
 		IF,
 		ELSE,		
 		LABELED,	// {switch' |'case'   |'default'}
-		LOOP,		//'while',   {'for','do'}
-		JUMP,		//return, {break, continue}
+		//'while',   {'for','do'}
+		WHILE,
+		FOR,
+		DO,
+		//return, {break, continue}
+		RETURN,
+		BREAK,
+		CONTINUE,
 		SCAN,
 
 		NOT_EQUAL,			// !=

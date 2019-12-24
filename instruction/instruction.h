@@ -3,11 +3,9 @@
 #include <cstdint>
 #include <utility>
 
-namespace majc0 {
+namespace miniplc0 {
 
 	enum Operation {
-		// ILL = 0,
-		// LIT,
 
 		NOP = 0,
 		BIPUSH,
@@ -54,14 +52,18 @@ namespace majc0 {
 		JLE,
 		CALL,		// call index(2)
 		RET,
-		IREI,
-		AREI,
+		IRET,
+		// ARET,
 		IPRINT,
 		CPRINT,
-		APRINT,
+		// APRINT,
 		// SPRINT,
 		PRINTL,
-		ISCAN
+		ISCAN,
+		PCONSTANTS,	//.constants:
+		PSTART,		//.start:
+		PFUNCTION,	//.functions:
+		PFI			//.F1:    .F0:     .F17:	...
 	};
 	
 	class Instruction final {
@@ -70,26 +72,33 @@ namespace majc0 {
 	public:
 		friend void swap(Instruction& lhs, Instruction& rhs);
 	public:
-		Instruction(Operation opr, int32_t x) : _opr(opr), _x(x) {}
-		Instruction(Operation opr, int32_t x, int32_t y) : _opr(opr), _x(x), _y(y) {} ///////
-		Instruction() : Instruction(Operation::NOP, 0){}
-		Instruction(const Instruction& i) { _opr = i._opr; _x = i._x; }
+		// Instruction(Operation opr, int32_t x) : _opr(opr), _x(x) {}
+		// Instruction(Operation opr, int32_t x, int32_t y) : _opr(opr), _x(x), _y(y) {} 
+		Instruction(int32_t index, Operation opr, int32_t x, int32_t y) : _index(index), _opr(opr), _x(x), _y(y) {} 
+		Instruction() : Instruction(0, Operation::NOP, 0, 0){}
+		Instruction(const Instruction& i) { _index = i._index; _opr = i._opr; _x = i._x; _y = i._y;}
 		Instruction(Instruction&& i) :Instruction() { swap(*this, i); }
 		Instruction& operator=(Instruction i) { swap(*this, i); return *this; }
-		bool operator==(const Instruction& i) const { return _opr == i._opr && _x == i._x; }
+		bool operator==(const Instruction& i) const { return _index == i._index && _opr == i._opr && _x == i._x && _y == i._y; }
 
+		void SetX(int32_t x){ _x = x; }
+		void SetY(int32_t y){ _y = y; }
+		int32_t GetIndex() const { return _index; }
 		Operation GetOperation() const { return _opr; }
 		int32_t GetX() const { return _x; }
+		int32_t GetY() const { return _y; }
 	private:
+		int32_t _index;
 		Operation _opr;
 		int32_t _x;
-		int32_t _y;	////////
+		int32_t _y;
 	};
 
 	inline void swap(Instruction& lhs, Instruction& rhs) {
 		using std::swap;
+		swap(lhs._index, rhs._index);
 		swap(lhs._opr, rhs._opr);
 		swap(lhs._x, rhs._x);
-		swap(lhs._y, rhs._y); ///////
+		swap(lhs._y, rhs._y);
 	}
 }

@@ -12,7 +12,7 @@
 #include <vector>
 #include <string>
 
-namespace majc0 {
+namespace miniplc0 {
 
 	class Tokenizer final {
 	private:

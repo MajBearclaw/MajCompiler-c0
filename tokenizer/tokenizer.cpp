@@ -3,7 +3,7 @@
 #include <cctype>
 #include <sstream>
 
-namespace majc0 {
+namespace miniplc0 {
 
 	std::pair<std::optional<Token>, std::optional<CompilationError>> Tokenizer::NextToken() {
 		if (!_initialized)
@@ -72,18 +72,18 @@ namespace majc0 {
 
 				// 使用了自己封装的判断字符类型的函数，定义于 tokenizer/utils.hpp
 				// see https://en.cppreference.com/w/cpp/string/byte/isblank
-				if (majc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
+				if (miniplc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
 					current_state = DFAState::INITIAL_STATE; // 保留当前状态为初始状态，此处直接break也是可以的
-				else if (!majc0::isprint(ch)) // control codes and backspace
+				else if (!miniplc0::isprint(ch)) // control codes and backspace
 					invalid = true;
-				else if (majc0::isdigit(ch)) // 读到的字符是数字
+				else if (miniplc0::isdigit(ch)) // 读到的字符是数字
 				{
 					if( (char)ch == '0'){
 						current_state = DFAState::ZERO_STATE;
 					}else
 						current_state = DFAState::UNSIGNED_INTEGER_STATE; // 切换到无符号整数的状态
 				}
-				else if (majc0::isalpha(ch)) // 读到的字符是英文字母
+				else if (miniplc0::isalpha(ch)) // 读到的字符是英文字母
 					current_state = DFAState::IDENTIFIER_STATE; // 切换到标识符的状态
 				else {
 					switch (ch) {
@@ -162,9 +162,9 @@ namespace majc0 {
 				if( ch == 'x' || ch == 'X'){
 					current_state = DFAState::HEX_X_STATE;
 					ss << ch;
-				}else if (majc0::isdigit(ch))
+				}else if (miniplc0::isdigit(ch))
 					return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrFrontZero));
-				else if (majc0::isalpha(ch)){
+				else if (miniplc0::isalpha(ch)){
 					ss << ch;
 					current_state = DFAState::IDENTIFIER_STATE;
 				}else {
@@ -179,7 +179,7 @@ namespace majc0 {
 					return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrInvalidHexInteger));
 				
 				auto ch = current_char.value();
-				if (majc0::isdigit(ch) || majc0::isalpha(ch)){
+				if (miniplc0::isdigit(ch) || miniplc0::isalpha(ch)){
 					ss << ch;
 					current_state = DFAState::HEX_DIGIT_STATE;
 				}else 
@@ -200,10 +200,10 @@ namespace majc0 {
 				//get the value of current_char
 				auto ch = current_char.value();
 				// 如果读到的字符是数字，则存储读到的字符
-				if (majc0::isdigit(ch))
+				if (miniplc0::isdigit(ch))
 					ss << ch;
 				// 如果读到的是字母，则存储读到的字符，并切换状态到标识符
-				else if (majc0::isalpha(ch)){
+				else if (miniplc0::isalpha(ch)){
 					ss << ch;
 					current_state = DFAState::IDENTIFIER_STATE;
 				}
@@ -230,7 +230,7 @@ namespace majc0 {
 				//get the value of current_char
 				auto ch = current_char.value();
 				// 如果读到的字符是数字，则存储读到的字符
-				if (majc0::isdigit(ch) || majc0::isalpha(ch))
+				if (miniplc0::isdigit(ch) || miniplc0::isalpha(ch))
 					ss << ch;
 				// 如果读到的字符不是上述情况之一，则回退读到的字符，并解析已经读到的字符串为整数
 				else {
@@ -265,10 +265,18 @@ namespace majc0 {
 						return std::make_pair(std::make_optional<Token>(TokenType::ELSE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "switch" || ss.str() == "case" || ss.str() == "default")
 						return std::make_pair(std::make_optional<Token>(TokenType::LABELED, ss.str(), pos, currentPos()), std::optional<CompilationError>());
-					else if( ss.str() == "while" || ss.str() == "for" || ss.str() == "do")
-						return std::make_pair(std::make_optional<Token>(TokenType::LOOP, ss.str(), pos, currentPos()), std::optional<CompilationError>());
-					else if( ss.str() == "return" || ss.str() == "break" || ss.str() == "continue")
-						return std::make_pair(std::make_optional<Token>(TokenType::JUMP, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "while")
+						return std::make_pair(std::make_optional<Token>(TokenType::WHILE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "for")
+						return std::make_pair(std::make_optional<Token>(TokenType::FOR, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "do")
+						return std::make_pair(std::make_optional<Token>(TokenType::DO, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "return")
+						return std::make_pair(std::make_optional<Token>(TokenType::RETURN, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "break")
+						return std::make_pair(std::make_optional<Token>(TokenType::BREAK, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "continue")
+						return std::make_pair(std::make_optional<Token>(TokenType::CONTINUE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "const")
 						return std::make_pair(std::make_optional<Token>(TokenType::CONST, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "print")
@@ -278,7 +286,7 @@ namespace majc0 {
 				}
 				auto ch = current_char.value();
 				// 如果读到的是字符或字母，则存储读到的字符
-				if ( majc0::isdigit(ch) || majc0::isalpha(ch) )
+				if ( miniplc0::isdigit(ch) || miniplc0::isalpha(ch) )
 					ss << ch;
 				// 如果读到的字符不是上述情况之一，则回退读到的字符，并解析已经读到的字符串
 				else {
@@ -296,10 +304,18 @@ namespace majc0 {
 						return std::make_pair(std::make_optional<Token>(TokenType::ELSE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "switch" || ss.str() == "case" || ss.str() == "default")
 						return std::make_pair(std::make_optional<Token>(TokenType::LABELED, ss.str(), pos, currentPos()), std::optional<CompilationError>());
-					else if( ss.str() == "while" || ss.str() == "for" || ss.str() == "do")
-						return std::make_pair(std::make_optional<Token>(TokenType::LOOP, ss.str(), pos, currentPos()), std::optional<CompilationError>());
-					else if( ss.str() == "return" || ss.str() == "break" || ss.str() == "continue")
-						return std::make_pair(std::make_optional<Token>(TokenType::JUMP, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "while")
+						return std::make_pair(std::make_optional<Token>(TokenType::WHILE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "for")
+						return std::make_pair(std::make_optional<Token>(TokenType::FOR, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "do")
+						return std::make_pair(std::make_optional<Token>(TokenType::DO, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "return")
+						return std::make_pair(std::make_optional<Token>(TokenType::RETURN, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "break")
+						return std::make_pair(std::make_optional<Token>(TokenType::BREAK, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					else if( ss.str() == "continue")
+						return std::make_pair(std::make_optional<Token>(TokenType::CONTINUE, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "const")
 						return std::make_pair(std::make_optional<Token>(TokenType::CONST, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					else if( ss.str() == "print")
@@ -415,7 +431,7 @@ namespace majc0 {
 					// ss << ch;
 					// current_state = DFAState::NOT_EQUAL_SIGN_STATE;
 					// break;
-					return std::make_pair(std::make_optional<Token>(TokenType::NOT_EQUAL, '!=', pos, currentPos()), std::optional<CompilationError>());
+					return std::make_pair(std::make_optional<Token>(TokenType::NOT_EQUAL, "!=", pos, currentPos()), std::optional<CompilationError>());
 				}
 				unreadLast();
 				return std::make_pair(std::make_optional<Token>(TokenType::EXCLAMATION, '!', pos, currentPos()), std::optional<CompilationError>());
@@ -438,7 +454,7 @@ namespace majc0 {
 		switch (t.GetType()) {
 			case IDENTIFIER: {
 				auto val = t.GetValueString();
-				if (majc0::isdigit(val[0]))
+				if (miniplc0::isdigit(val[0]))
 					return std::make_optional<CompilationError>(t.GetStartPos().first, t.GetStartPos().second, ErrorCode::ErrInvalidIdentifier);
 				break;
 			}

@@ -5,7 +5,7 @@
 #include <utility>
 #include <iostream>
 
-namespace majc0 {
+namespace miniplc0 {
 
 	inline void DieAndPrint(std::string condition) {
 		std::cout << "Exception: " <<  condition << "\n";
@@ -21,34 +21,36 @@ namespace majc0 {
 		ErrNoError, // Should be only used internally.
 		ErrStreamError, 
 		ErrEOF,
-		ErrInvalidInput,
-		ErrInvalidIdentifier,
-		// ErrIntegerOverflow, // int64_t overflow.
-		// ErrNoBegin,
-		// ErrNoEnd,
-		ErrNeedIdentifier,
-		ErrConstantNeedValue,
-		ErrNoSemicolon,
-		ErrInvalidVariableDeclaration,
-		ErrIncompleteExpression,
-		ErrNotDeclared,
-		ErrAssignToConstant,
-		ErrDuplicateDeclaration,
-		ErrNotInitialized,
-		ErrInvalidAssignment,
-		ErrInvalidPrint
-
-		,
+		ErrInvalidInput,				//无效输入
+		ErrInvalidPrint,				//无效print
+		ErrInvalidIdentifier,			//无效标识符
+		ErrNeedIdentifier,				//需要标识符
+		ErrConstantNeedValue,			//常量无值
+		ErrNoSemicolon,					// ;
+		ErrInvalidVariableDeclaration,	//无效变量声明
+		ErrIncompleteExpression,		//表达式不完整
+		ErrNotDeclared,					//先声明后使用
+		ErrAssignToConstant,			//给常量赋值
+		ErrDuplicateDeclaration,		//未声明var
+		ErrNotInitialized,				//未初始化var
+		ErrInvalidAssignment,			//无效赋值语句
+		
+		
 		ErrNeedLeftBracket,		//need '('
 		ErrNeedRightBracket,	//need ')'
 		ErrNeedLeftBrace,		//need '{'
 		ErrNeedRightBrace,		//need '}'
+		ErrNeedComma,			//need ','
 		ErrVoidInVar,			//把void用在了变量声明
+		ErrConstFunc,			//const修饰了函数
 		ErrFrontZero,			//十进制整数不能有前导0
 		ErrInvalidHexInteger,	//只有0x|0X，缺少后面的数值
 		ErrNeedTypeSpecifier,	//const 后面需要类型修饰符
 		ErrUnimplemented,			//未实现的功能
-		ErrInvalidStatement		//无效语句
+		ErrInvalidStatement,		//无效表达式
+		ErrConstVoid,				// const void xxx
+		ErrExpressionNeedValue,		// 表达式需要值
+		ErrNeedMain					// 缺少main函数
 	};
 
 	class CompilationError final{

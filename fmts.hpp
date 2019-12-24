@@ -4,93 +4,108 @@
 
 namespace fmt {
 	template<>
-	struct formatter<majc0::ErrorCode> {
+	struct formatter<miniplc0::ErrorCode> {
 		template <typename ParseContext>
 		constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
 		template <typename FormatContext>
-		auto format(const majc0::ErrorCode &p, FormatContext &ctx) {
+		auto format(const miniplc0::ErrorCode &p, FormatContext &ctx) {
 			std::string name;
 			switch (p) {
-			case majc0::ErrNoError:
+			case miniplc0::ErrNoError:
 				name = "No error.";
 				break;
-			case majc0::ErrStreamError:
+			case miniplc0::ErrStreamError:
 				name = "Stream error.";
 				break;
-			case majc0::ErrEOF:
+			case miniplc0::ErrEOF:
 				name = "EOF. This code is uncompleted.";
 				break;
-			case majc0::ErrInvalidInput:
+			case miniplc0::ErrInvalidInput:
 				name = "The input is invalid.";
 				break;
-			case majc0::ErrInvalidIdentifier:
+			case miniplc0::ErrInvalidIdentifier:
 				name = "Identifier is invalid";
 				break;
 			
-			case majc0::ErrNeedIdentifier:
+			case miniplc0::ErrNeedIdentifier:
 				name = "Need an identifier here.";
 				break;
-			case majc0::ErrConstantNeedValue:
+			case miniplc0::ErrConstantNeedValue:
 				name = "The constant need a value to initialize.";
 				break;
-			case majc0::ErrNoSemicolon:
+			case miniplc0::ErrNoSemicolon:
 				name = "Zai? Wei shen me bu xie fen hao.";
 				break;
-			case majc0::ErrInvalidVariableDeclaration:
+			case miniplc0::ErrInvalidVariableDeclaration:
 				name = "The declaration is invalid.";
 				break;
-			case majc0::ErrIncompleteExpression:
+			case miniplc0::ErrIncompleteExpression:
 				name = "The expression is incomplete.";
 				break;
-			case majc0::ErrNotDeclared:
+			case miniplc0::ErrNotDeclared:
 				name = "The variable or constant must be declared before being used.";
 				break;
-			case majc0::ErrAssignToConstant:
+			case miniplc0::ErrAssignToConstant:
 				name = "Trying to assign value to a constant.";
 				break;
-			case majc0::ErrDuplicateDeclaration:
-				name = "The variable or constant has been declared.";
+			case miniplc0::ErrDuplicateDeclaration:
+				name = "The variable|constant|parameter|function has been declared.";
 				break;
-			case majc0::ErrNotInitialized:
+			case miniplc0::ErrNotInitialized:
 				name = "The variable has not been initialized.";
 				break;
-			case majc0::ErrInvalidAssignment:
+			case miniplc0::ErrInvalidAssignment:
 				name = "The assignment statement is invalid.";
 				break;
-			case majc0::ErrInvalidPrint:
+			case miniplc0::ErrInvalidPrint:
 				name = "The output statement is invalid.";
 				break;
 			
-			case majc0::ErrNeedLeftBracket:
-				name = "Need '(' here."
+			case miniplc0::ErrNeedLeftBracket:
+				name = "Need '(' here.";
 				break;
-			case majc0::ErrNeedRightBracket:
-				name = "Need ')' here."
+			case miniplc0::ErrNeedRightBracket:
+				name = "Need ')' here.";
 				break;
-			case majc0::ErrNeedLeftBrace:
-				name = "Need '{' here."
+			case miniplc0::ErrNeedLeftBrace:
+				name = "Need '{' here.";
 				break;
-			case majc0::ErrNeedRightBrace:
-				name = "Need '}' here."
+			case miniplc0::ErrNeedRightBrace:
+				name = "Need '}' here.";
 				break;
-			case majc0::ErrVoidInVar:
-				name = "'void' cannot be used in variable-declaration."
+			case miniplc0::ErrNeedComma:
+				name = "Need ',' here.";
 				break;
-			case majc0::ErrFrontZero:
+			case miniplc0::ErrVoidInVar:
+				name = "'void' cannot be used in variable-declaration.";
+				break;
+			case miniplc0::ErrConstFunc:
+				name = "'const' cannot be used to specifify function.";
+				break;
+			case miniplc0::ErrFrontZero:
 				name = "The decimal Integer should not have front-zero.";
 				break;
-			case majc0::ErrInvalidHexInteger:
+			case miniplc0::ErrInvalidHexInteger:
 				name = "The hex Integer should have value after '0X'|'0x'.";
 				break;
-			case majc0::ErrNeedTypeSpecifier:
+			case miniplc0::ErrNeedTypeSpecifier:
 				name = "variable-declaration should have type-specifier after 'const'.";
 				break;
-			case majc0::ErrUnimplemented:
+			case miniplc0::ErrUnimplemented:
 				name = "Unimplemented grammer, e.g. 'char','double','do','for','switch','case',...";
 				break;
-			case majc0::ErrInvalidStatement:
-				name = "It is not a valid statement.";
+			case miniplc0::ErrInvalidStatement:
+				name = "This is an invalid Statement.";
+				break;
+			case miniplc0::ErrConstVoid:
+				name = "Void cannot be const.";
+				break;
+			case miniplc0::ErrExpressionNeedValue:
+				name = "Expression must have value instead of 'void'.";
+				break;
+			case miniplc0::ErrNeedMain:
+				name = "Program must have function main().";
 				break;
 			}
 			return format_to(ctx.out(), name);
@@ -98,12 +113,12 @@ namespace fmt {
 	};
 
 	template<>
-	struct formatter<majc0::CompilationError> {
+	struct formatter<miniplc0::CompilationError> {
 		template <typename ParseContext>
 		constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
 		template <typename FormatContext>
-		auto format(const majc0::CompilationError &p, FormatContext &ctx) {
+		auto format(const miniplc0::CompilationError &p, FormatContext &ctx) {
 			return format_to(ctx.out(), "Line: {} Column: {} Error: {}", p.GetPos().first, p.GetPos().second, p.GetCode());
 		}
 	};
@@ -111,12 +126,12 @@ namespace fmt {
 
 namespace fmt {
 	template<>
-	struct formatter<majc0::Token> {
+	struct formatter<miniplc0::Token> {
 		template <typename ParseContext>
 		constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
 		template <typename FormatContext>
-		auto format(const majc0::Token &p, FormatContext &ctx) {
+		auto format(const miniplc0::Token &p, FormatContext &ctx) {
 			return format_to(ctx.out(),
 				"Line: {} Column: {} Type: {} Value: {}",
 				p.GetStartPos().first, p.GetStartPos().second, p.GetType(), p.GetValueString());
@@ -124,53 +139,125 @@ namespace fmt {
 	};
 
 	template<>
-	struct formatter<majc0::TokenType> {
+	struct formatter<miniplc0::TokenType> {
 		template <typename ParseContext>
 		constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
 		template <typename FormatContext>
-		auto format(const majc0::TokenType &p, FormatContext &ctx) {
+		auto format(const miniplc0::TokenType &p, FormatContext &ctx) {
 			std::string name;
 			switch (p) {
-			case majc0::NULL_TOKEN:
+			case miniplc0::NULL_TOKEN:
 				name = "NullToken";
 				break;
-			case majc0::UNSIGNED_INTEGER:
+			case miniplc0::UNSIGNED_INTEGER:
 				name = "UnsignedInteger";
 				break;
-			case majc0::IDENTIFIER:
+			case miniplc0::IDENTIFIER:
 				name = "Identifier";
 				break;
 			
-			case majc0::CONST:
+			case miniplc0::CONST:
 				name = "Const";
 				break;
-			case majc0::PRINT:
+			case miniplc0::PRINT:
 				name = "Print";
 				break;
-			case majc0::PLUS_SIGN:
+			case miniplc0::PLUS_SIGN:
 				name = "PlusSign";
 				break;
-			case majc0::MINUS_SIGN:
+			case miniplc0::MINUS_SIGN:
 				name = "MinusSign";
 				break;
-			case majc0::MULTIPLICATION_SIGN:
+			case miniplc0::MULTIPLICATION_SIGN:
 				name = "MultiplicationSign";
 				break;
-			case majc0::DIVISION_SIGN:
+			case miniplc0::DIVISION_SIGN:
 				name = "DivisionSign";
 				break;
-			case majc0::EQUAL_SIGN:
+			case miniplc0::EQUAL_SIGN:
 				name = "EqualSign";
 				break;
-			case majc0::SEMICOLON:
+			case miniplc0::SEMICOLON:
 				name = "Semicolon";
 				break;
-			case majc0::LEFT_BRACKET:
+			case miniplc0::LEFT_BRACKET:
 				name = "LeftBracket";
 				break;
-			case majc0::RIGHT_BRACKET:
+			case miniplc0::RIGHT_BRACKET:
 				name = "RightBracket";
+				break;
+			case miniplc0::LEFT_ANGLE_BRACKET:
+				name = "LeftAngleBracket";
+				break;
+			case miniplc0::RIGHT_ANGLE_BRACKET:
+				name = "RightAngleBracket";
+				break;
+			case miniplc0::LEFT_BRACE:
+				name = "LeftBrace";
+				break;
+			case miniplc0::RIGHT_BRACE:
+				name = "RightBrace";
+				break;
+			case miniplc0::LEFT_SQUARE_BRACKET:
+				name = "LeftSquareBracket";
+				break;
+			case miniplc0::RIGHT_SQUARE_BRACKET:
+				name = "RightSquareBracket";
+				break;
+			case miniplc0::EXCLAMATION:
+				name = "Exclamation";
+				break;
+			case miniplc0::COMMA:
+				name = "Comma";
+				break;
+			case miniplc0::SPECIFIER:
+				name = "Specifier";
+				break;
+			case miniplc0::STRUCT:
+				name = "Struct";
+				break;
+			case miniplc0::IF:
+				name = "If";
+				break;
+			case miniplc0::ELSE:
+				name = "Else";
+				break;
+			case miniplc0::LABELED:
+				name = "Labeled";
+				break;
+			case miniplc0::WHILE:
+				name = "While";
+				break;
+			case miniplc0::DO:
+				name = "Do";
+				break;
+			case miniplc0::FOR:
+				name = "For";
+				break;
+			case miniplc0::RETURN:
+				name = "Return";
+				break;
+			case miniplc0::BREAK:
+				name = "Break";
+				break;
+			case miniplc0::CONTINUE:
+				name = "Continue";
+				break;
+			case miniplc0::SCAN:
+				name = "Scan";
+				break;
+			case miniplc0::NOT_EQUAL:
+				name = "NotEqual";
+				break;
+			case miniplc0::EQUAL_EQUAL:
+				name = "EqualEqual";
+				break;
+			case miniplc0::LESS_OR_EQUAL:
+				name = "LessOrEqual";
+				break;
+			case miniplc0::GREATER_OR_EQUAL:
+				name = "GreaterOrEqual";
 				break;
 			}
 			return format_to(ctx.out(), name);
@@ -180,228 +267,246 @@ namespace fmt {
 
 namespace fmt {
 	template<>
-	struct formatter<majc0::Operation> {
+	struct formatter<miniplc0::Operation> {
 		template <typename ParseContext>
 		constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
 		template <typename FormatContext>
-		auto format(const majc0::Operation &p, FormatContext &ctx) {
+		auto format(const miniplc0::Operation &p, FormatContext &ctx) {
 			std::string name;
 			switch (p) {
-			case majc0::NOP:
+			case miniplc0::NOP:
 				name = "nop";
 				break;
-			case majc0::BIPUSH:
+			case miniplc0::BIPUSH:
 				name = "bipush";
 				break;
-			case majc0::IPUSH:
+			case miniplc0::IPUSH:
 				name = "ipush";
 				break;
-			case majc0::POP:
+			case miniplc0::POP:
 				name = "pop";
 				break;
-			case majc0::POP2:
+			case miniplc0::POP2:
 				name = "pop2";
 				break;
-			case majc0::POPN:
+			case miniplc0::POPN:
 				name = "popN";
 				break;
-			case majc0::DUP:
+			case miniplc0::DUP:
 				name = "dup";
 				break;
-			case majc0::DUP2:
+			case miniplc0::DUP2:
 				name = "dup2";
 				break;
-			case majc0::LOADC:
+			case miniplc0::LOADC:
 				name = "loadc";
 				break;
-			case majc0::LOADA:
+			case miniplc0::LOADA:
 				name = "loada";
 				break;
-			case majc0::NEW:
+			case miniplc0::NEW:
 				name = "new";
 				break;
-			case majc0::SNEW:
+			case miniplc0::SNEW:
 				name = "snew";
 				break;
-			case majc0::ILOAD:
+			case miniplc0::ILOAD:
 				name = "iload";
 				break;
-			case majc0::ALOAD:
+			case miniplc0::ALOAD:
 				name = "aload";
 				break;
-			case majc0::IALOAD:
+			case miniplc0::IALOAD:
 				name = "iaload";
 				break;
-			case majc0::AALOAD:
+			case miniplc0::AALOAD:
 				name = "aaload";
 				break;
-			case majc0::ISTORE:
+			case miniplc0::ISTORE:
 				name = "istore";
 				break;
-			case majc0::ASTORE:
+			case miniplc0::ASTORE:
 				name = "astore";
 				break;
-			case majc0::IASTORE:
+			case miniplc0::IASTORE:
 				name = "iastore";
 				break;
-			case majc0::AASTORE:
+			case miniplc0::AASTORE:
 				name = "aastore";
 				break;
-			case majc0::IADD:
+			case miniplc0::IADD:
 				name = "iadd";
 				break;
-			case majc0::ISUB:
+			case miniplc0::ISUB:
 				name = "isub";
 				break;
-			case majc0::IMUL:
+			case miniplc0::IMUL:
 				name = "imul";
 				break;
-			case majc0::IDIV:
+			case miniplc0::IDIV:
 				name = "idiv";
 				break;
-			case majc0::INEG:
+			case miniplc0::INEG:
 				name = "ineg";
 				break;
-			case majc0::ICMP:
+			case miniplc0::ICMP:
 				name = "icmp";
 				break;
-			// case majc0::DADD:
+			// case miniplc0::DADD:
 			// 	name = "dadd";
 			// 	break;
-			// case majc0::DSUB:
+			// case miniplc0::DSUB:
 			// 	name = "dsub";
 			// 	break;
-			// case majc0::DMUL:
+			// case miniplc0::DMUL:
 			// 	name = "dmul";
 			// 	break;
-			// case majc0::DDIV:
+			// case miniplc0::DDIV:
 			// 	name = "ddiv";
 			// 	break;
-			// case majc0::DNEG:
+			// case miniplc0::DNEG:
 			// 	name = "dneg";
 			// 	break;
-			// case majc0::DCMP:
+			// case miniplc0::DCMP:
 			// 	name = "dcmp";
 			// 	break;
-			// case majc0::I2D:
+			// case miniplc0::I2D:
 			// 	name = "i2d";
 			// 	break;
-			// case majc0::D2I:
+			// case miniplc0::D2I:
 			// 	name = "d2i";
 			// 	break;
-			// case majc0::I2C:
+			// case miniplc0::I2C:
 			// 	name = "i2c";
 			// 	break;
-			case majc0::JMP:
+			case miniplc0::JMP:
 				name = "jmp";
 				break;
-			case majc0::JE:
+			case miniplc0::JE:
 				name = "je";
 				break;
-			case majc0::JNE:
+			case miniplc0::JNE:
 				name = "jne";
 				break;
-			case majc0::JL:
+			case miniplc0::JL:
 				name = "jl";
 				break;
-			case majc0::JGE:
+			case miniplc0::JGE:
 				name = "jge";
 				break;
-			case majc0::JG:
+			case miniplc0::JG:
 				name = "jg";
 				break;
-			case majc0::JLE:
+			case miniplc0::JLE:
 				name = "jle";
 				break;
-			case majc0::CALL:
+			case miniplc0::CALL:
 				name = "call";
 				break;
-			case majc0::RET:
+			case miniplc0::RET:
 				name = "ret";
 				break;
-			case majc0::IRET:
+			case miniplc0::IRET:
 				name = "iret";
 				break;
-			case majc0::ARET:
-				name = "aret";
-				break;
-			case majc0::IPRINT:
+			// case miniplc0::ARET:
+			// 	name = "aret";
+			// 	break;
+			case miniplc0::IPRINT:
 				name = "iprint";
 				break;
-			case majc0::CPRINT:
+			case miniplc0::CPRINT:
 				name = "cprint";
 				break;
-			// case majc0::SPRINT:
+			// case miniplc0::SPRINT:
 			// 	name = "sprint";
 			// 	break;
-			case majc0::PRINTL:
+			case miniplc0::PRINTL:
 				name = "printl";
 				break;
-			case majc0::ISCAN:
+			case miniplc0::ISCAN:
 				name = "iscan";
+				break;
+			case miniplc0::PCONSTANTS:
+				name = ".constants:";
+				break;
+			case miniplc0::PSTART:
+				name = ".start:";
+				break;
+			case miniplc0::PFUNCTION:
+				name = ".functions:";
+				break;
+			case miniplc0::PFI:
+				name = ".F";
 				break;
 			}
 			return format_to(ctx.out(), name);
 		}
 	};
 	template<>
-	struct formatter<majc0::Instruction> {
+	struct formatter<miniplc0::Instruction> {
 		template <typename ParseContext>
 		constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
 		template <typename FormatContext>
-		auto format(const majc0::Instruction &p, FormatContext &ctx) {
+		auto format(const miniplc0::Instruction &p, FormatContext &ctx) {
 			std::string name;
 			switch (p.GetOperation())
 			{
-			
-			case majc0::NOP:
-			case majc0::POP:
-			case majc0::POP2:
-			case majc0::DUP:
-			case majc0::DUP2:
-			case majc0::NEW:		// pop (int)count: new (count) slot
-			case majc0::ILOAD:
-			case majc0::ALOAD:
-			case majc0::IALOAD:		// array
-			case majc0::AALOAD:
-			case majc0::ISTORE:
-			case majc0::ASTORE:
-			case majc0::IASTORE:	// array
-			case majc0::AASTORE:
-			case majc0::IADD:
-			case majc0::ISUB:
-			case majc0::IMUL:
-			case majc0::IDIV:
-			case majc0::INEG:		// a = -a
-			case majc0::ICMP:		// pop r: pop l: push sign(l-r);  1|-1|0
-			case majc0::RET:
-			case majc0::IREI:
-			case majc0::AREI:
-			case majc0::IPRINT:
-			case majc0::CPRINT:
-			case majc0::APRINT:
-			case majc0::PRINTL:
-			case majc0::ISCAN:
+			case miniplc0::PCONSTANTS:
+			case miniplc0::PSTART:
+			case miniplc0::PFUNCTION:
 				return format_to(ctx.out(), "{}", p.GetOperation());	//needn't params
-			case majc0::BIPUSH:
-			case majc0::IPUSH:	
-			case majc0::POPN:
-			case majc0::LOADC:		// load constant_index(2)
-			case majc0::SNEW:		// snew count(4)					
-			case majc0::JMP:		
-			case majc0::JE:
-			case majc0::JNE:
-			case majc0::JL:
-			case majc0::JGE:
-			case majc0::JG:
-			case majc0::JLE:
-			case majc0::CALL:		
+			case miniplc0::NOP:
+			case miniplc0::POP:
+			case miniplc0::POP2:
+			case miniplc0::DUP:
+			case miniplc0::DUP2:
+			case miniplc0::NEW:		// pop (int)count: new (count) slot
+			case miniplc0::ILOAD:
+			case miniplc0::ALOAD:
+			case miniplc0::IALOAD:		// array
+			case miniplc0::AALOAD:
+			case miniplc0::ISTORE:
+			case miniplc0::ASTORE:
+			case miniplc0::IASTORE:	// array
+			case miniplc0::AASTORE:
+			case miniplc0::IADD:
+			case miniplc0::ISUB:
+			case miniplc0::IMUL:
+			case miniplc0::IDIV:
+			case miniplc0::INEG:		// a = -a
+			case miniplc0::ICMP:		// pop r: pop l: push sign(l-r);  1|-1|0
+			case miniplc0::RET:
+			case miniplc0::IRET:
+			// case miniplc0::ARET:
+			case miniplc0::IPRINT:
+			case miniplc0::CPRINT:
+			// case miniplc0::APRINT:
+			case miniplc0::PRINTL:
+			case miniplc0::ISCAN:
+				return format_to(ctx.out(), "{} {}", p.GetIndex(), p.GetOperation());	//needn't params
+			case miniplc0::BIPUSH:
+			case miniplc0::IPUSH:	
+			case miniplc0::POPN:
+			case miniplc0::LOADC:		// load constant_index(2)
+			case miniplc0::SNEW:		// snew count(4)					
+			case miniplc0::JMP:		
+			case miniplc0::JE:
+			case miniplc0::JNE:
+			case miniplc0::JL:
+			case miniplc0::JGE:
+			case miniplc0::JG:
+			case miniplc0::JLE:
+			case miniplc0::CALL:		
 				return format_to(ctx.out(), "{} {}", p.GetOperation(), p.GetX());
 			///////////////////////////////////////////////
-			case majc0::LOADA:		// loada level_diff(2), offset(4)
+			case miniplc0::LOADA:		// loada level_diff(2), offset(4)
 				return format_to(ctx.out(), "{} {} {}", p.GetOperation(), p.GetX(), p.GetY());
+			/////// .F0:    .F1:    .F17:    ...
+			case miniplc0::PFI:
+				return format_to(ctx.out(), "{}{}:", p.GetOperation(), p.GetX() );
 			}
 			return format_to(ctx.out(), "nop");
 		}
