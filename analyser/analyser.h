@@ -13,7 +13,7 @@
 
 #include <list>
 
-namespace miniplc0 {
+namespace cc0 {
 	// 变量|函数参数
 	class C0Var final{
 	private:
@@ -88,8 +88,8 @@ namespace miniplc0 {
 
 		std::string getFuncName() const { return _funcName; }
 		std::string getRetType() const { return _retType; }
-		int32_t getOffset() const { return _offset; }
-		int32_t getParamsNum() {return _paramsList.size(); }
+		std::int32_t getOffset() const { return _offset; }
+		std::int32_t getParamsNum() {return _paramsList.size(); }
 		std::vector<C0Var> * getParamsList() {return &_paramsList; }
 
 		void setFuncName(const std::string& funcname) {this->_funcName = funcname; }
@@ -221,12 +221,12 @@ namespace miniplc0 {
 		void addFunction(C0Function&);
 
 		// 删除level层级的所有变量
-		void crushVar(int32_t);
+		// void crushVar(int32_t);
 
 		// 获取变量/常量
 		C0Var* getVar(const std::string&, int32_t);
 		C0Var* getGlobalVar(const std::string&);
-		// C0Var* getGlobalConst(const std::string&);
+		// C0Var* getConst(const std::string&);
 		// 获取函数
 		C0Function* getFunc(const std::string&);
 	private:
@@ -236,11 +236,11 @@ namespace miniplc0 {
 		std::pair<uint64_t, uint64_t> _current_pos;
 
 		// for global var, not function class
-		// std::vector<miniplc0::C0Var> _globalConstantsTable;
-		std::vector<miniplc0::C0Function> _functionsTable;
-		std::vector<miniplc0::C0Var> _globalVariablesTable;
+		// std::vector<cc0::C0Var> _globalConstantsTable;
+		std::vector<cc0::C0Function> _functionsTable;
+		std::vector<cc0::C0Var> _globalVariablesTable;
 		// 不包含全局常量,全局变量和函数, level from 1 ~ n-1
-		std::vector<miniplc0::C0Var> _variablesTable;
+		std::vector<cc0::C0Var> _variablesTable;
 
 		// 下一个 token 在栈的偏移
 		int32_t _nextTokenIndex;	

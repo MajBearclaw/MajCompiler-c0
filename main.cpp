@@ -8,8 +8,8 @@
 #include <iostream>
 #include <fstream>
 
-std::vector<miniplc0::Token> _tokenize(std::istream& input) {
-	miniplc0::Tokenizer tkz(input);
+std::vector<cc0::Token> _tokenize(std::istream& input) {
+	cc0::Tokenizer tkz(input);
 	auto p = tkz.AllTokens();
 	if (p.second.has_value()) {
 		fmt::print(stderr, "Tokenization error: {}\n", p.second.value());
@@ -27,7 +27,7 @@ void Tokenize(std::istream& input, std::ostream& output) {
 
 void Analyse(std::istream& input, std::ostream& output){
 	auto tks = _tokenize(input);
-	miniplc0::Analyser analyser(tks);
+	cc0::Analyser analyser(tks);
 	auto p = analyser.Analyse();
 	if (p.second.has_value()) {
 		fmt::print(stderr, "Syntactic analysis error: {}\n", p.second.value());
@@ -40,20 +40,20 @@ void Analyse(std::istream& input, std::ostream& output){
 }
 
 int main(int argc, char** argv) {
-	argparse::ArgumentParser program("miniplc0");
+	argparse::ArgumentParser program("cc0");
 	program.add_argument("input")
 		.help("speicify the file to be compiled.");
 	program.add_argument("-t")
 		.default_value(false)
 		.implicit_value(true)
 		.help("perform tokenization for the input file.");
-	program.add_argument("-l")
+	program.add_argument("-s")
 		.default_value(false)
 		.implicit_value(true)
 		.help("perform syntactic analysis for the input file.");
 	program.add_argument("-o", "--output")
 		.required()
-		.default_value(std::string("-"))
+		.default_value(std::string("out.s0"))
 		.help("specify the output file.");
 
 	try {
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 	}
 	else
 		input = &std::cin;
-	if (output_file != "-") {
+	if (output_file != "out.s0") {
 		outf.open(output_file, std::ios::out | std::ios::trunc);
 		if (!outf) {
 			fmt::print(stderr, "Fail to open {} for writing.\n", output_file);
@@ -89,16 +89,22 @@ int main(int argc, char** argv) {
 		}
 		output = &outf;
 	}
-	else
-		output = &std::cout;
-	if (program["-t"] == true && program["-l"] == true) {
+	else{
+		outf.open(output_file, std::ios::out | std::ios::trunc);
+		if (!outf) {
+			fmt::print(stderr, "Fail to open {} for writing.\n", output_file);
+			exit(2);
+		}
+		output = &outf;		
+	}
+	if (program["-t"] == true && program["-s"] == true) {
 		fmt::print(stderr, "You can only perform tokenization or syntactic analysis at one time.");
 		exit(2);
 	}
 	if (program["-t"] == true) {
 		Tokenize(*input, *output);
 	}
-	else if (program["-l"] == true) {
+	else if (program["-s"] == true) {
 		Analyse(*input, *output);
 	}
 	else {

@@ -3,7 +3,7 @@
 #include <climits>
 #include <stack>
 
-namespace miniplc0 {
+namespace cc0 {
 	
 	// 当前层级，每多一层嵌套{}, ++;
 	// 函数声明不用++, 只有遇到函数参数之后的{, 才++
@@ -19,9 +19,6 @@ namespace miniplc0 {
 	// 变量声明的下标
 	static int32_t current_var_index = 0;
 	
-	// static std::stack <int32_t> func_level_st ;
-	static std::stack <int32_t> instruction_index_st ;
-	
 	std::pair<std::vector<Instruction>, std::optional<CompilationError>> Analyser::Analyse() {
 		auto err = analyseProgram();
 		if (err.has_value())
@@ -34,8 +31,9 @@ namespace miniplc0 {
 	std::optional<CompilationError> Analyser::analyseProgram() {
 		_instructions.emplace_back(0, Operation::PSTART, 0, 0);
 		auto err = analyseVariableDeclarationMulti();
-		if(err.has_value())
-			return err;
+		if(err.has_value()) return err;
+		_instructions.emplace_back(0, Operation::PFUNCTION, 0, 0);
+		int32_t functableIndex = _instructions.size();
 		err = analyseFunctionDefinitionMulti();
 		if(err.has_value())  return err;
 		bool inclmain = false;
@@ -47,6 +45,22 @@ namespace miniplc0 {
 		}
 		if ( ! inclmain)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedMain);
+		////////////////////////////////////函数表
+		int32_t funcSize = _functionsTable.size();
+		for (int i=funcSize-1; i>=0; i--){
+			Instruction tmpInstr(_functionsTable[i].getOffset(), _functionsTable[i].getOffset(),_functionsTable[i].getParamsNum(), (int32_t)1);
+			auto it = _instructions.begin()+functableIndex;
+			_instructions.insert(it, tmpInstr);
+		}
+		////////////////////////////////////常量表
+		for (int i=funcSize-1; i>=0; i--){
+			Instruction tmpInstr(_functionsTable[i].getOffset(), "S", _functionsTable[i].getFuncName());
+			auto it = _instructions.begin();
+			_instructions.insert(it, tmpInstr);
+		}
+		auto it = _instructions.begin();
+		Instruction tmpInstr(0, Operation::PCONSTANTS, 0, 0);
+		_instructions.insert(it, tmpInstr);
 		return {};
 	}
 
@@ -311,6 +325,8 @@ namespace miniplc0 {
 			auto identiName = next.value().GetValueString();
 			if (isVariable(identiName, current_func_level)){
 				C0Var * ptmpvar = getVar(identiName, current_func_level);
+				if ( ! ptmpvar->isInitialized())
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNotInitialized);
 				_instructions.emplace_back(current_instruction_index++, Operation::LOADA, !(ptmpvar->getLevel()), ptmpvar->getOffset());
 				_instructions.emplace_back(current_instruction_index++, Operation::ILOAD, 0, 0);
 			}else if (isFunction(identiName)){
@@ -366,6 +382,7 @@ namespace miniplc0 {
 			current_var_index = tmpfunc.getParamsNum();
 			// 符号表中的层级+1，函数层级对应+1，符号表层级的递增在analyseCompoundStatement()函数中完成
 			current_func_level++;
+			_instructions.emplace_back(0, Operation::PFI, current_func_index, 0);
 			// <compound-statement>
 			err = analyseCompoundStatement();
 			if (err.has_value()) return err;
@@ -487,7 +504,7 @@ namespace miniplc0 {
 		next = nextToken();
 		if( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACE)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBrace);
-		crushVar(current_level);
+		// crushVar(current_level);
 		current_level--;
 		return {};
 	}
@@ -517,7 +534,6 @@ namespace miniplc0 {
 				next = nextToken();
 				if ( ! next.has_value() || next.value().GetType()!= TokenType::RIGHT_BRACE)
 					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBrace);
-				crushVar(current_level);
 				current_level--;
 			}else if (ttype == TokenType::IF){
 				unreadToken();
@@ -578,7 +594,7 @@ namespace miniplc0 {
 			next = nextToken();
 			if ( ! next.has_value() || next.value().GetType()!= TokenType::RIGHT_BRACE)
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBrace);
-			crushVar(current_level);
+			// crushVar(current_level);
 			current_level--;
 		}else if (ttype == TokenType::IF){
 			unreadToken();
@@ -996,7 +1012,7 @@ namespace miniplc0 {
 		return nullptr;
 	}
 
-	// C0Var * Analyser::getGlobalConst(const std::string& s) {
+	// C0Var * Analyser::getConst(const std::string& s) {
 	// 	int32_t len = _globalConstantsTable.size();
 	// 	for (int i=len; i>=0; i--){
 	// 		if (s == _globalConstantsTable[i].getName())
@@ -1014,16 +1030,16 @@ namespace miniplc0 {
 		return nullptr;
 	}
 
-	void Analyser::crushVar(int32_t level){
-		if (level <= 0)
-			return;
-		while(true){
-			if (!_variablesTable.empty() && _variablesTable.back().getLevel() == level) 
-				_variablesTable.pop_back();
-			else 
-				break;
-		}
-		return ;
-	}
+	// void Analyser::crushVar(int32_t level){
+	// 	if (level <= 0)
+	// 		return;
+	// 	while(true){
+	// 		if (!_variablesTable.empty() && _variablesTable.back().getLevel() == level) 
+	// 			_variablesTable.pop_back();
+	// 		else 
+	// 			break;
+	// 	}
+	// 	return ;
+	// }
 
 }

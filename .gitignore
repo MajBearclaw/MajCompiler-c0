@@ -1,6 +1,9 @@
 .vs
+.vscode
 CMakeSettings.json
-*.plc0
+*.c0
+*.s0
 *.txt
 !CMakeLists.txt
 build
+testcase

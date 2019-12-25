@@ -8,8 +8,8 @@
 #include <string>
 #include <climits>
 
-namespace majc0 {
-	// This is a simplified version of majc0 vm implementation for testing.
+namespace miniplc0 {
+	// This is a simplified version of miniplc0 vm implementation for testing.
 	class VM {
 	private:
 		using uint64_t = std::uint64_t;
