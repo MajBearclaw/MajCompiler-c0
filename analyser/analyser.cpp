@@ -8,11 +8,9 @@ namespace cc0 {
 	// 当前层级，每多一层嵌套{}, ++;
 	// 函数声明不用++, 只有遇到函数参数之后的{, 才++
 	static int32_t current_level = 0;
-	// 每调用一个函数, pop (func_current_level)
 	// 当前函数下标(函数表的大小)  .F0的0, .F1的1
 	static int32_t current_func_index = 0;
-	// 下述表达式只在 函数声明 开始有效
-	// func_current_level := current_level+1
+	// func_current_level++ 在param声明之前，在compound之后--
 	static int32_t current_func_level = 0;
 	// 指令下标 from 0 ~ n-1
 	static int32_t current_instruction_index = 0;
@@ -21,10 +19,12 @@ namespace cc0 {
 	
 	std::pair<std::vector<Instruction>, std::optional<CompilationError>> Analyser::Analyse() {
 		auto err = analyseProgram();
-		if (err.has_value())
-			return std::make_pair(std::vector<Instruction>(), err);
-		else
-			return std::make_pair(_instructions, std::optional<CompilationError>());
+		////////////////////////////////////////////
+		// if (err.has_value())
+		// 	return std::make_pair(std::vector<Instruction>(), err);
+		// else
+		// 	return std::make_pair(_instructions, std::optional<CompilationError>());
+		return std::make_pair(_instructions, err);
 	}
 
 	// <C0-program> ::= {<variable-declaration>}{<function-definition>}
@@ -45,16 +45,19 @@ namespace cc0 {
 		}
 		if ( ! inclmain)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedMain);
-		////////////////////////////////////函数表
+		// 函数表
 		int32_t funcSize = _functionsTable.size();
 		for (int i=funcSize-1; i>=0; i--){
-			Instruction tmpInstr(_functionsTable[i].getOffset(), _functionsTable[i].getOffset(),_functionsTable[i].getParamsNum(), (int32_t)1);
+			Instruction tmpInstr(_functionsTable[i].getOffset(), Operation::SAVEFUNCTION, _functionsTable[i].getParamsNum(), _functionsTable[i].getOffset());
 			auto it = _instructions.begin()+functableIndex;
 			_instructions.insert(it, tmpInstr);
 		}
-		////////////////////////////////////常量表
+		// 常量表
+		std::string tmps = "S"; 
 		for (int i=funcSize-1; i>=0; i--){
-			Instruction tmpInstr(_functionsTable[i].getOffset(), "S", _functionsTable[i].getFuncName());
+			///////////////////////////////
+			std::string tmpfuncname = _functionsTable[i].getFuncName();
+			Instruction tmpInstr(_functionsTable[i].getOffset(), Operation::SAVECONST, tmps, tmpfuncname);
 			auto it = _instructions.begin();
 			_instructions.insert(it, tmpInstr);
 		}
@@ -70,16 +73,17 @@ namespace cc0 {
 		while (true){
 			auto next = nextToken();
 			auto isConst = 0;
-			if (!next.has_value()) return {};
+			if ( ! next.has_value()) 
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrEOF);
 			// [<const-qualifier>]
 			else if (next.value().GetType() == TokenType::CONST ){
 				isConst = 1;
 				next = nextToken();
+				if( ! next.has_value())
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrEOF);
 			}
 			// <type-specifier>
-			if( ! next.has_value())
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedTypeSpecifier);
-			else if(next.value().GetType() == TokenType::SPECIFIER){
+			if(next.value().GetType() == TokenType::SPECIFIER){
 				std::string str = next.value().GetValueString();
 				if(str == "int"){
 					///
@@ -97,16 +101,18 @@ namespace cc0 {
 			else{
 				if (isConst)
 					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedTypeSpecifier);
-				unreadToken();
+				unreadToken();	//unrd <type-specifier>
 				return {};
 			}
-			
-			// 检查是否是函数, <identifier>'('
+			// 检查是否是函数, <identifier>'(', 预测是否是函数定义
 			next = nextToken();
 			if ( ! next.has_value() || next.value().GetType() != TokenType::IDENTIFIER)
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
+			// '('
 			next = nextToken();
-			if ( ! next.has_value() || next.value().GetType() == TokenType::LEFT_BRACKET){
+			if ( ! next.has_value() )
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrEOF);
+			else if	(next.value().GetType() == TokenType::LEFT_BRACKET){
 				if (isConst)
 					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrConstFunc);
 				unreadToken();	// unrd '('
@@ -118,10 +124,11 @@ namespace cc0 {
 			unreadToken();	// unrd <identifier>
 
 			// <init-declarator-list>
-			analyseInitDeclaratorList(isConst);
+			auto err = analyseInitDeclaratorList(isConst);
+			if (err.has_value()) return err;
 			// ';'
 			next = nextToken();
-			if (!next.has_value() || next.value().GetType() != TokenType::SEMICOLON)
+			if ( ! next.has_value() || next.value().GetType() != TokenType::SEMICOLON)
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
 		}
 		return {};
@@ -154,12 +161,15 @@ namespace cc0 {
 	std::optional<CompilationError> Analyser::analyseInitDeclarator(int32_t isConst) {
 		// <identifier>
 		auto next = nextToken();
-		if (!next.has_value() || next.value().GetType() != TokenType::IDENTIFIER)
+		if ( ! next.has_value() || next.value().GetType() != TokenType::IDENTIFIER)
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
-		if (isDeclaredSameLevel(next.value().GetValueString(), current_level))
+		if (isDeclaredSameLevel(next.value().GetValueString(), current_func_level))
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
-		C0Var tmpvar(next.value().GetValueString(), "int", current_level, current_var_index);
-		addGlobalVariable(tmpvar);		
+		C0Var tmpvar(next.value().GetValueString(), "int", current_func_level, current_var_index);
+		if (current_func_level == 0)
+			addGlobalVariable(tmpvar);
+		else 
+			addVariable(tmpvar);
 		// [<initializer>]
 		// 		[ '='<expression>  ]
 		next = nextToken();
@@ -168,18 +178,17 @@ namespace cc0 {
 		else if( next.value().GetType() == TokenType::EQUAL_SIGN){
 			// <expression>
 			auto err = analyseExpression();
-			if (err.has_value())
-				return err;
+			if (err.has_value()) return err;
 			tmpvar.setInitialized();
+			if (isConst)
+				tmpvar.setConst();
 		}
 		else {
 			if (isConst)
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrConstantNeedValue);
 			_instructions.emplace_back(current_instruction_index++, Operation::SNEW, 1, 0);
-			unreadToken();
+			unreadToken();	//unrd '='
 		}
-		if (isConst)
-			tmpvar.setConst();
 		return {};
 	}
 
@@ -195,8 +204,7 @@ namespace cc0 {
 		auto prefix = 1; // 1 => '+'; -1 => '-'
 		// <multiplicative-expression>
 		auto err = analyseMultiplicativeExpression();
-		if (err.has_value())
-			return err;
+		if (err.has_value()) return err;
 		// {...}
 		while (true){
 			// <additive-operator>
@@ -227,8 +235,7 @@ namespace cc0 {
 	std::optional<CompilationError> Analyser::analyseMultiplicativeExpression() {
 		// <cast-expression>
 		auto err = analyseCastExpression();
-		if(err.has_value())
-			return err;
+		if(err.has_value()) return err;
 		auto prefixMul = 1; // 1 => '*'; -1 => '/'
 		// {...}
 		while (true) {
@@ -237,7 +244,7 @@ namespace cc0 {
 			if( ! next.has_value())
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrEOF);
 			else if (next.value().GetType() == TokenType::MULTIPLICATION_SIGN){
-				//prefixMul = 1;
+				prefixMul = 1;
 			}else if (next.value().GetType() == TokenType::DIVISION_SIGN){
 				prefixMul = -1;
 			}else {
@@ -272,8 +279,7 @@ namespace cc0 {
 		*/
 		// <unary-expression>
 		auto err = analyseUnaryExpression();
-		if (err.has_value())
-			return err;
+		if (err.has_value()) return err;
 		return {};
 	}
 
@@ -287,7 +293,7 @@ namespace cc0 {
 		if( ! next.has_value())
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrEOF);
 		else if (next.value().GetType() == TokenType::PLUS_SIGN){
-			// prefix = 1;
+			prefix = 1;
 		}else if (next.value().GetType() == TokenType::MINUS_SIGN){
 			prefix = -1;
 		}else {
@@ -295,8 +301,7 @@ namespace cc0 {
 		}
 		// <primary-expression>
 		auto err = analysePrimaryExpression();
-		if (err.has_value())
-			return err;
+		if (err.has_value()) return err;
 		if (prefix == -1)
 			_instructions.emplace_back(current_instruction_index++, Operation::INEG, 0, 0);
 		return {};
@@ -327,7 +332,11 @@ namespace cc0 {
 				C0Var * ptmpvar = getVar(identiName, current_func_level);
 				if ( ! ptmpvar->isInitialized())
 					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNotInitialized);
-				_instructions.emplace_back(current_instruction_index++, Operation::LOADA, !(ptmpvar->getLevel()), ptmpvar->getOffset());
+				// 计算层次差
+				int32_t level_diff = 0;
+				if (ptmpvar->getLevel() != current_func_level) 
+					level_diff = 1;
+				_instructions.emplace_back(current_instruction_index++, Operation::LOADA, level_diff, ptmpvar->getOffset());
 				_instructions.emplace_back(current_instruction_index++, Operation::ILOAD, 0, 0);
 			}else if (isFunction(identiName)){
 				C0Function * pfunc = getFunc(identiName);
@@ -375,18 +384,23 @@ namespace cc0 {
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
 			C0Function tmpfunc(next.value().GetValueString(), tmptype, current_func_index);
 			addFunction(tmpfunc);
+			current_var_index = 0;
+			// 符号表中的层级+1，函数层级对应+1，符号表层级的递增在analyseCompoundStatement()函数中完成
+			current_func_level++;
 			// <parameter-clause>
 			auto err = analyseParameterClause();
 			if (err.has_value()) return err;
 			// 变量声明的下标从参数表长度开始
 			current_var_index = tmpfunc.getParamsNum();
-			// 符号表中的层级+1，函数层级对应+1，符号表层级的递增在analyseCompoundStatement()函数中完成
-			current_func_level++;
+			// 指令下标重置为0
+			current_instruction_index = 0;
 			_instructions.emplace_back(0, Operation::PFI, current_func_index, 0);
 			// <compound-statement>
 			err = analyseCompoundStatement();
 			if (err.has_value()) return err;
+			// crushVar(current_level);
 			current_func_index++;
+			current_func_level--;
 		}
 		return {};
 	}
@@ -395,10 +409,7 @@ namespace cc0 {
 	// 		'(' [<parameter-declaration-list>] ')'
 	std::optional<CompilationError> Analyser::analyseParameterClause(){
 		auto next = nextToken();
-		if( ! next.has_value() )
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrEOF);
-		// '('
-		else if (next.value().GetType() != TokenType::LEFT_BRACKET)
+		if( ! next.has_value() || next.value().GetType() != TokenType::LEFT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedLeftBracket);
 		// read ')' 
 		next = nextToken();
@@ -472,15 +483,17 @@ namespace cc0 {
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::IDENTIFIER)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
-		std::string tmpParaName;
-		if (isDeclaredSameLevel(tmpParaName, current_level+1))
+		std::string tmpParaName = next.value().GetValueString();
+		if (isDeclaredSameLevel(tmpParaName, current_func_level))
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
-		C0Var tmpparam(tmpParaName, "int", current_level+1, current_var_index);
+		C0Var tmpparam(tmpParaName, "int", current_func_level, current_var_index);
 		tmpparam.setInitialized();
 		if (isConst)
 			tmpparam.setConst();
 		// 加入函数的参数表
 		_functionsTable[current_func_index].getParamsList()->push_back(tmpparam);
+		//加入局部变量表
+		addVariable(tmpparam);
 		return {};
 	}
 
@@ -494,17 +507,15 @@ namespace cc0 {
 		current_level++;
 		// {<variable-declaration>}
 		auto err = analyseVariableDeclarationMulti();
-		if (err.has_value())
-			return err;
+		if (err.has_value()) return err;
 		// <statement-seq>
 		err = analyseStatementSeq();
-		if (err.has_value())
-			return err;
+		if (err.has_value()) return err;
 		// '}'
 		next = nextToken();
 		if( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACE)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBrace);
-		// crushVar(current_level);
+		crushVar(current_func_level);
 		current_level--;
 		return {};
 	}
@@ -524,7 +535,7 @@ namespace cc0 {
 	std::optional<CompilationError> Analyser::analyseStatementSeq(){
 		while (true){
 			auto next = nextToken();
-			if (next.has_value()) return {};
+			if ( ! next.has_value()) return {};
 			auto ttype = next.value().GetType();
 			auto tvalue = next.value().GetValueString();
 			if (ttype == TokenType::LEFT_BRACE){
@@ -534,6 +545,7 @@ namespace cc0 {
 				next = nextToken();
 				if ( ! next.has_value() || next.value().GetType()!= TokenType::RIGHT_BRACE)
 					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBrace);
+				// crushVar(current_level);
 				current_level--;
 			}else if (ttype == TokenType::IF){
 				unreadToken();
@@ -557,7 +569,7 @@ namespace cc0 {
 				if (err.has_value()) return err;
 			}else if (ttype == TokenType::IDENTIFIER){
 				// var 
-				if (isVariable(tvalue,current_func_level)){
+				if (isVariable(tvalue, current_func_level)){
 					unreadToken();
 					auto err = analyseAssignmentExpression();
 					if (err.has_value()) return err;
@@ -576,6 +588,7 @@ namespace cc0 {
 			}else if (ttype == TokenType::SEMICOLON){
 				_instructions.emplace_back(current_instruction_index++, Operation::NOP, 0, 0);
 			}else {
+				unreadToken();
 				return {};
 			}
 		}
@@ -584,7 +597,7 @@ namespace cc0 {
 
 	std::optional<CompilationError> Analyser::analyseStatement(){
 		auto next = nextToken();
-		if (next.has_value()) return {};
+		if ( ! next.has_value()) return {};
 		auto ttype = next.value().GetType();
 		auto tvalue = next.value().GetValueString();
 		if (ttype == TokenType::LEFT_BRACE){
@@ -621,8 +634,7 @@ namespace cc0 {
 			if (isVariable(tvalue,current_func_level)){
 				unreadToken();
 				auto err = analyseAssignmentExpression();
-				if (err.has_value())
-					return err;
+				if (err.has_value()) return err;
 			}
 			// function
 			else if (isFunction(tvalue)){
@@ -660,6 +672,7 @@ namespace cc0 {
 		int32_t ifindex = _instructions.size();
 		_instructions.emplace_back(current_instruction_index++, tmpop, 0, 0);
 		err = analyseStatement();
+		if (err.has_value()) return err;
 		next = nextToken();
 		_instructions[ifindex].SetX(current_instruction_index);
 		if( ! next.has_value() || next.value().GetType() != TokenType::ELSE){
@@ -726,6 +739,7 @@ namespace cc0 {
 	// <return-statement>
 	// 		'return' [<expression>] ';'
 	std::optional<CompilationError> Analyser::analyseReturnStatement(){
+		// 'return'
 		auto next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::RETURN)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrInvalidStatement);
@@ -737,8 +751,9 @@ namespace cc0 {
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::SEMICOLON)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
-		if (rettype == "int")
+		if (rettype == "int"){
 			_instructions.emplace_back(current_instruction_index++, Operation::IRET, 0, 0);
+		}
 		else 
 			_instructions.emplace_back(current_instruction_index++, Operation::RET, 0, 0);
 		return {};
@@ -747,6 +762,7 @@ namespace cc0 {
 	// <print-statement>
 	// 		'print' '(' [<printable-list>] ')' ';'
 	std::optional<CompilationError> Analyser::analysePrintStatement(){
+		// 'print'
 		auto next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::PRINT)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrInvalidStatement);
@@ -788,6 +804,7 @@ namespace cc0 {
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBracket);
+		// ';'
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::SEMICOLON)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
@@ -809,10 +826,13 @@ namespace cc0 {
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
 		if ( ! isVariable(next.value().GetValueString(), current_func_level))
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrInvalidIdentifier);
-		C0Var * ptmpvar = getVar(next.value().GetValueString(),current_func_level);
+		C0Var * ptmpvar = getVar(next.value().GetValueString(), current_func_level);
 		if (ptmpvar->isConst())
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrAssignToConstant);
-		_instructions.emplace_back(current_instruction_index++, Operation::LOADA, !(ptmpvar->getLevel()), ptmpvar->getOffset());
+		int32_t level_diff = 0;
+		if (ptmpvar->getLevel() != current_func_level) 
+			level_diff = 1;
+		_instructions.emplace_back(current_instruction_index++, Operation::LOADA, level_diff, ptmpvar->getOffset());
 		_instructions.emplace_back(current_instruction_index++, Operation::ISCAN, 0, 0);
 		_instructions.emplace_back(current_instruction_index++, Operation::ISTORE, 0, 0);
 		if ( ! ptmpvar->isInitialized())
@@ -821,6 +841,7 @@ namespace cc0 {
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBracket);
+		// ;
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::SEMICOLON)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
@@ -1030,16 +1051,16 @@ namespace cc0 {
 		return nullptr;
 	}
 
-	// void Analyser::crushVar(int32_t level){
-	// 	if (level <= 0)
-	// 		return;
-	// 	while(true){
-	// 		if (!_variablesTable.empty() && _variablesTable.back().getLevel() == level) 
-	// 			_variablesTable.pop_back();
-	// 		else 
-	// 			break;
-	// 	}
-	// 	return ;
-	// }
+	void Analyser::crushVar(int32_t level){
+		if (level <= 0)
+			return;
+		while(true){
+			if (!_variablesTable.empty() && _variablesTable.back().getLevel() == level) 
+				_variablesTable.pop_back();
+			else 
+				break;
+		}
+		return ;
+	}
 
 }

@@ -14,6 +14,15 @@
 #include <list>
 
 namespace cc0 {
+	// 变量类型,"S","I","D","A","C"
+	// for constants
+	enum varType{
+		S,
+		I,
+		C,
+		D,
+		A
+	};
 	// 变量|函数参数
 	class C0Var final{
 	private:
@@ -82,8 +91,8 @@ namespace cc0 {
 	public:
 		friend void swap(C0Function& lhs, C0Function& rhs);
 
-		C0Function(const std::string& name, const std::string& type, int32_t index)
-			: _funcName(name), _paramsList({}), _varList({}), _retType(type), _index(index) {}
+		C0Function(const std::string& name, const std::string& type, int32_t offset)
+			: _funcName(name), _paramsList({}), _varList({}), _retType(type), _offset(offset) {}
 		C0Function& operator=(C0Function t) { swap(*this, t); return *this; }
 
 		std::string getFuncName() const { return _funcName; }
@@ -100,8 +109,7 @@ namespace cc0 {
 		std::vector<C0Var> _paramsList;
 		std::vector<C0Var> _varList;
 		std::string _retType;
-		int32_t _index;	//from 0 ~ n-1
-		int32_t _offset;
+		int32_t _offset;	//from 0 ~ n-1
 		//需要入口地址吗
 	};
 
@@ -111,7 +119,6 @@ namespace cc0 {
 		swap(lhs._paramsList, rhs._paramsList);
 		swap(lhs._varList, rhs._varList);
 		swap(lhs._retType, rhs._retType);
-		swap(lhs._index, rhs._index);
 		swap(lhs._offset, rhs._offset);
 	}
 
@@ -221,7 +228,7 @@ namespace cc0 {
 		void addFunction(C0Function&);
 
 		// 删除level层级的所有变量
-		// void crushVar(int32_t);
+		void crushVar(int32_t);
 
 		// 获取变量/常量
 		C0Var* getVar(const std::string&, int32_t);

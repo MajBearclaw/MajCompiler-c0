@@ -21,6 +21,7 @@ namespace cc0 {
 		ErrNoError, // Should be only used internally.
 		ErrStreamError, 
 		ErrEOF,
+		ErrUnknown,
 		ErrInvalidInput,				//无效输入
 		ErrInvalidPrint,				//无效print
 		ErrInvalidIdentifier,			//无效标识符
@@ -34,8 +35,6 @@ namespace cc0 {
 		ErrDuplicateDeclaration,		//未声明var
 		ErrNotInitialized,				//未初始化var
 		ErrInvalidAssignment,			//无效赋值语句
-		
-		
 		ErrNeedLeftBracket,		//need '('
 		ErrNeedRightBracket,	//need ')'
 		ErrNeedLeftBrace,		//need '{'

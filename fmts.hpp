@@ -67,10 +67,10 @@ namespace fmt {
 				name = "Need ')' here.";
 				break;
 			case cc0::ErrNeedLeftBrace:
-				name = "Need '{' here.";
+				name = "Need Left Brace here.";
 				break;
 			case cc0::ErrNeedRightBrace:
-				name = "Need '}' here.";
+				name = "Need Right Brace here.";
 				break;
 			case cc0::ErrNeedComma:
 				name = "Need ',' here.";
@@ -104,6 +104,9 @@ namespace fmt {
 				break;
 			case cc0::ErrNeedMain:
 				name = "Program must have function main().";
+				break;
+			case cc0::ErrUnknown:
+				name = "unknown error.";
 				break;
 			default:
 				name = "unknown error.";
@@ -443,6 +446,12 @@ namespace fmt {
 			case cc0::PFI:
 				name = ".F";
 				break;
+			case cc0::SAVECONST:
+				name = "saveconst";
+				break;
+			case cc0::SAVEFUNCTION:
+				name = "savefunction";
+				break;
 			default:
 				name = "unknown instruction";
 				break;
@@ -458,19 +467,20 @@ namespace fmt {
 		template <typename FormatContext>
 		auto format(const cc0::Instruction &p, FormatContext &ctx) {
 			std::string name;
-			// 常量池
-			if (p.GetType()==1)
-				return format_to(ctx.out(), "{} {} {}", p.GetIndex(), p.GetConstType(), p.GetStringValue() );
-			// 常量池
-			else if (p.GetType()==2)
-				return format_to(ctx.out(), "{} {} {} {}", p.GetIndex(), p.GetNameindex(), p.GetX(), p.GetY() );
-			// 常规指令 
 			switch (p.GetOperation())
 			{
+			// 保存常量表
+			case cc0::SAVECONST:
+				return format_to(ctx.out(), "{} \"S\" {}", p.GetIndex(), p.GetConstType(), p.GetStringValue() );
+			// .F0:    .F1:    .F17:    ...
+			case cc0::PFI:
+				return format_to(ctx.out(), ".F{}:", p.GetX() );
 			case cc0::PCONSTANTS:
 			case cc0::PSTART:
 			case cc0::PFUNCTION:
-				return format_to(ctx.out(), "{} {} {} {}", p.GetIndex(), p.GetNameindex(), p.GetX(), p.GetY() );	//{index} {name_index} {params_size} {level}
+				return format_to(ctx.out(), "{}", p.GetOperation() );
+			case cc0::SAVEFUNCTION:
+				return format_to(ctx.out(), "{} {} {} 1", p.GetIndex(), p.GetIndex(), p.GetX());
 			case cc0::NOP:
 			case cc0::POP:
 			case cc0::POP2:
@@ -513,13 +523,9 @@ namespace fmt {
 			case cc0::JG:
 			case cc0::JLE:
 			case cc0::CALL:		
-				return format_to(ctx.out(), "{} {}", p.GetOperation(), p.GetX());
-			///////////////////////////////////////////////
+				return format_to(ctx.out(), "{} {} {}", p.GetIndex(), p.GetOperation(), p.GetX());
 			case cc0::LOADA:		// loada level_diff(2), offset(4)
-				return format_to(ctx.out(), "{} {} {}", p.GetOperation(), p.GetX(), p.GetY());
-			/////// .F0:    .F1:    .F17:    ...
-			case cc0::PFI:
-				return format_to(ctx.out(), ".F{}:", p.GetX() );
+				return format_to(ctx.out(), "{} {} {} {}", p.GetIndex(), p.GetOperation(), p.GetX(), p.GetY());
 			}
 			return format_to(ctx.out(), "nop");
 		}
