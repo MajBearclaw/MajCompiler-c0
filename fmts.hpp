@@ -530,7 +530,7 @@ namespace fmt {
 			case cc0::CALL:		
 				return format_to(ctx.out(), "{} {} {}", p.GetIndex(), p.GetOperation(), p.GetX());
 			case cc0::LOADA:		// loada level_diff(2), offset(4)
-				return format_to(ctx.out(), "{} {} {} {}", p.GetIndex(), p.GetOperation(), p.GetX(), p.GetY());
+				return format_to(ctx.out(), "{} {} {}, {}", p.GetIndex(), p.GetOperation(), p.GetX(), p.GetY());
 			}
 			return format_to(ctx.out(), "nop");
 		}
