@@ -1,6 +1,8 @@
 #include "fmt/core.h"
 #include "tokenizer/tokenizer.h"
 #include "analyser/analyser.h"
+#include <string>
+#include <any>
 
 namespace fmt {
 	template<>
@@ -104,6 +106,9 @@ namespace fmt {
 				break;
 			case cc0::ErrNeedMain:
 				name = "Program must have function main().";
+				break;
+			case cc0::ErrNeedReturn:
+				name = "Function need return statement.";
 				break;
 			case cc0::ErrUnknown:
 				name = "unknown error.";
@@ -471,7 +476,7 @@ namespace fmt {
 			{
 			// 保存常量表
 			case cc0::SAVECONST:
-				return format_to(ctx.out(), "{} \"S\" {}", p.GetIndex(), p.GetConstType(), p.GetStringValue() );
+				return format_to(ctx.out(), "{} S \"{}\"", p.GetIndex(), p.GetConstType() );
 			// .F0:    .F1:    .F17:    ...
 			case cc0::PFI:
 				return format_to(ctx.out(), ".F{}:", p.GetX() );

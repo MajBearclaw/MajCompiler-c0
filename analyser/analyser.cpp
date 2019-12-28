@@ -55,9 +55,10 @@ namespace cc0 {
 		// 常量表
 		std::string tmps = "S"; 
 		for (int i=funcSize-1; i>=0; i--){
-			///////////////////////////////
 			std::string tmpfuncname = _functionsTable[i].getFuncName();
-			Instruction tmpInstr(_functionsTable[i].getOffset(), Operation::SAVECONST, tmps, tmpfuncname);
+			Instruction tmpInstr(_functionsTable[i].getOffset(), Operation::SAVECONST, 0, 0);
+			tmpInstr.SetConstType("S");
+			tmpInstr.SetConstType(tmpfuncname);
 			auto it = _instructions.begin();
 			_instructions.insert(it, tmpInstr);
 		}
@@ -166,10 +167,6 @@ namespace cc0 {
 		if (isDeclaredSameLevel(next.value().GetValueString(), current_func_level))
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
 		C0Var tmpvar(next.value().GetValueString(), "int", current_func_level, current_var_index);
-		if (current_func_level == 0)
-			addGlobalVariable(tmpvar);
-		else 
-			addVariable(tmpvar);
 		// [<initializer>]
 		// 		[ '='<expression>  ]
 		next = nextToken();
@@ -189,6 +186,10 @@ namespace cc0 {
 			_instructions.emplace_back(current_instruction_index++, Operation::SNEW, 1, 0);
 			unreadToken();	//unrd '='
 		}
+		if (current_func_level == 0)
+			addGlobalVariable(&tmpvar);
+		else 
+			addVariable(&tmpvar);
 		return {};
 	}
 
@@ -383,24 +384,35 @@ namespace cc0 {
 			if (isDeclaredSameLevel(next.value().GetValueString(), 0))
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
 			C0Function tmpfunc(next.value().GetValueString(), tmptype, current_func_index);
-			addFunction(tmpfunc);
+			addFunction(&tmpfunc);
 			current_var_index = 0;
 			// 符号表中的层级+1，函数层级对应+1，符号表层级的递增在analyseCompoundStatement()函数中完成
 			current_func_level++;
 			// <parameter-clause>
 			auto err = analyseParameterClause();
 			if (err.has_value()) return err;
-			// 变量声明的下标从参数表长度开始
-			current_var_index = tmpfunc.getParamsNum();
 			// 指令下标重置为0
 			current_instruction_index = 0;
 			_instructions.emplace_back(0, Operation::PFI, current_func_index, 0);
+			// // 参数全部放到变量表中
+			// auto paramnum = _functionsTable[current_func_index].getParamsNum();
+			// for(int i = 0;i<paramnum;i++){
+			// 	std::vector<cc0::C0Var> * paramlst = _functionsTable[current_func_index].getParamsList();
+			// 	C0Var tmpvar = (*paramlst)[i];
+			// 	tmpvar.setInitialized();
+			// 	_variablesTable.push_back(tmpvar);
+			// }
+			// 变量声明的下标从参数表长度开始
+			current_var_index = tmpfunc.getParamsNum();
 			// <compound-statement>
 			err = analyseCompoundStatement();
 			if (err.has_value()) return err;
-			// crushVar(current_level);
+			crushVar(1);
 			current_func_index++;
 			current_func_level--;
+			// if( ! checkReturnTree(0))
+			// 	return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedReturn);
+			// crushReturnTree();
 		}
 		return {};
 	}
@@ -486,14 +498,14 @@ namespace cc0 {
 		std::string tmpParaName = next.value().GetValueString();
 		if (isDeclaredSameLevel(tmpParaName, current_func_level))
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
-		C0Var tmpparam(tmpParaName, "int", current_func_level, current_var_index);
+		C0Var tmpparam(tmpParaName, "int", 1, current_var_index);
 		tmpparam.setInitialized();
 		if (isConst)
 			tmpparam.setConst();
 		// 加入函数的参数表
 		_functionsTable[current_func_index].getParamsList()->push_back(tmpparam);
 		//加入局部变量表
-		addVariable(tmpparam);
+		addVariable(&tmpparam);
 		return {};
 	}
 
@@ -515,7 +527,7 @@ namespace cc0 {
 		next = nextToken();
 		if( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACE)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBrace);
-		crushVar(current_func_level);
+		crushVar(1);
 		current_level--;
 		return {};
 	}
@@ -661,26 +673,38 @@ namespace cc0 {
 		auto next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::IF)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrInvalidStatement);
+		// '('
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::LEFT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedLeftBracket);
 		Operation tmpop;
 		auto err = analyseCondition(tmpop);
 		if (err.has_value()) return err;
+		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBracket);
 		int32_t ifindex = _instructions.size();
 		_instructions.emplace_back(current_instruction_index++, tmpop, 0, 0);
+		// inReturnLeaf();
+		// <statement>
 		err = analyseStatement();
 		if (err.has_value()) return err;
-		next = nextToken();
 		_instructions[ifindex].SetX(current_instruction_index);
+		// 'else'
+		next = nextToken();
 		if( ! next.has_value() || next.value().GetType() != TokenType::ELSE){
+			// outReturnLeaf();
 			unreadToken();
 			return {};
 		}
+		// moveReturnLeaf();
+		// 设置跳出点
+		int32_t elseindex = _instructions.size();
+		_instructions.emplace_back(current_instruction_index++, Operation::JMP, 0, 0);
 		err = analyseStatement();
 		if (err.has_value()) return err;
+		_instructions[elseindex].SetX(current_instruction_index);
+		// outReturnLeaf();
 		return {};
 	}
 
@@ -717,15 +741,19 @@ namespace cc0 {
 	// <loop-statement>
 	// 		'while' '(' <condition> ')' <statement>
 	std::optional<CompilationError> Analyser::analyseLoopStatement(){
+		// 'while'
 		auto next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::WHILE)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrInvalidStatement);
+		// '('
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::LEFT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedLeftBracket);
 		Operation tmpop;
 		auto err = analyseCondition(tmpop);
 		if (err.has_value()) return err;
+		// ')'
+		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBracket);
 		int32_t whileindex = _instructions.size();
@@ -733,6 +761,7 @@ namespace cc0 {
 		err = analyseStatement();
 		if (err.has_value()) return err;
 		_instructions[whileindex].SetX(current_instruction_index);
+		_instructions.emplace_back(current_instruction_index++, Operation::JMP, whileindex, 0);
 		return {};
 	}
 
@@ -756,6 +785,7 @@ namespace cc0 {
 		}
 		else 
 			_instructions.emplace_back(current_instruction_index++, Operation::RET, 0, 0);
+		// addReturnNode();
 		return {};
 	}
 
@@ -928,20 +958,20 @@ namespace cc0 {
 		_offset--;
 	}
 
-	void Analyser::addGlobalVariable(C0Var& c0var) {
-		_globalVariablesTable.push_back(c0var);
+	void Analyser::addGlobalVariable(C0Var* pc0var) {
+		_globalVariablesTable.push_back(*pc0var);
 	}
 
 	// void Analyser::addGlobalConstant(C0Var& c0var) {
 	// 	_globalConstantsTable.push_back(c0var);
 	// }
 
-	void Analyser::addFunction(C0Function& func) {
-		_functionsTable.push_back(func);
+	void Analyser::addFunction(C0Function* pfunc) {
+		_functionsTable.push_back(*pfunc);
 	}
 
-	void Analyser::addVariable(C0Var& c0var) {
-		_variablesTable.push_back(c0var);
+	void Analyser::addVariable(C0Var* pc0var) {
+		_variablesTable.push_back(*pc0var);
 	}
 
 	// bool Analyser::isDeclared(const std::string& s, int32_t level) {
@@ -1017,11 +1047,7 @@ namespace cc0 {
 				return &_variablesTable[i];
 		}
 		pVar = getGlobalVar(s);
-		// if (pVar != nullptr)
-			return pVar;
-		// else if ((pVar = getGlobalConst(s)) != nullptr)
-		// 	return pVar;
-		// return nullptr;
+		return pVar;
 	}
 
 	C0Var * Analyser::getGlobalVar(const std::string& s){
@@ -1032,15 +1058,6 @@ namespace cc0 {
 		}
 		return nullptr;
 	}
-
-	// C0Var * Analyser::getConst(const std::string& s) {
-	// 	int32_t len = _globalConstantsTable.size();
-	// 	for (int i=len; i>=0; i--){
-	// 		if (s == _globalConstantsTable[i].getName())
-	// 			return &_globalConstantsTable[i];
-	// 	}
-	// 	return nullptr;
-	// }
 
 	C0Function* Analyser::getFunc(const std::string& s){
 		int32_t len = _functionsTable.size();
@@ -1063,4 +1080,42 @@ namespace cc0 {
 		return ;
 	}
 
+	// 清除return树
+	// void Analyser::crushReturnTree(){
+	// 	while( ! _returnTree.empty()){
+	// 		_returnTree.pop_back();
+	// 	}
+	// 	_preReturnIndex = 0;
+	// }
+	// // 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
+	// void Analyser::addReturnNode(){
+	// 	int32_t tmpsize = _returnTree.size();
+	// 	while(tmpsize<=_preReturnIndex){
+	// 		_returnTree.push_back(false);
+	// 		tmpsize++;
+	// 	}
+	// 	_returnTree[tmpsize] = true;
+	// }
+	// // returnTree生长叶子
+	// void Analyser::inReturnLeaf(){
+	// 	_preReturnIndex = _preReturnIndex*2+1;
+	// 	addReturnNode();
+	// }
+	// // 左叶子变右叶子
+	// void Analyser::moveReturnLeaf(){
+	// 	_preReturnIndex = _preReturnIndex+1;
+	// 	addReturnNode();
+	// }
+	// // 退出叶子
+	// void Analyser::outReturnLeaf(){
+	// 	_preReturnIndex = (_preReturnIndex-1)-1;
+	// }
+
+	// bool Analyser::checkReturnTree(int32_t givenIndex){
+	// 	if ( ((int32_t)(_returnTree.size()))<=givenIndex)
+	// 		return false;
+	// 	else
+	// 		return _returnTree[givenIndex] || 
+	// 			(checkReturnTree(givenIndex*2+1) && checkReturnTree(givenIndex*2+2));
+	// }
 }

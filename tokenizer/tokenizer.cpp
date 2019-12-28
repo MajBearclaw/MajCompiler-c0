@@ -132,6 +132,9 @@ namespace cc0 {
 					case '!':
 						current_state = DFAState::EXCLAMATION_STATE;
 						break;
+					case ',':
+						current_state = DFAState::COMMA_STATE;
+						break;
 					// 不接受的字符导致的不合法的状态
 					default:
 						invalid = true;

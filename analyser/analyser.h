@@ -11,18 +11,16 @@
 #include <cstdint>
 #include <cstddef> // for std::size_t
 
-#include <list>
-
 namespace cc0 {
 	// 变量类型,"S","I","D","A","C"
 	// for constants
-	enum varType{
-		S,
-		I,
-		C,
-		D,
-		A
-	};
+	// enum varType{
+	// 	S,
+	// 	I,
+	// 	C,
+	// 	D,
+	// 	A
+	// };
 	// 变量|函数参数
 	class C0Var final{
 	private:
@@ -130,7 +128,8 @@ namespace cc0 {
 		using int32_t = std::int32_t;
 	public:
 		Analyser(std::vector<Token> v)
-			: _tokens(std::move(v)), _offset(0), _instructions({}), _current_pos(0, 0), _functionsTable({}), _globalVariablesTable({}), _variablesTable({}) {}
+			: _tokens(std::move(v)), _offset(0), _instructions({}), _current_pos(0, 0), 
+			_functionsTable({}), _globalVariablesTable({}), _variablesTable({}), _returnTree(), _preReturnIndex(0){}
 		Analyser(Analyser&&) = delete;
 		Analyser(const Analyser&) = delete;
 		Analyser& operator=(Analyser) = delete;
@@ -210,11 +209,6 @@ namespace cc0 {
 		void unreadToken();
 
 		// 下面是符号表相关操作
-		// void _add(const Token&, std::map<std::string, int32_t>&);		
-		// void addVariable(const Token&);
-		// void addGlobalConstant(const Token&);
-		// void addFunction(const Token&);
-		// void addUninitializedVariable(const Token&);
 
 		// bool isDeclared(const std::string&,int32_t);
 		bool isDeclaredSameLevel(const std::string&, int32_t);
@@ -222,10 +216,10 @@ namespace cc0 {
 		bool isGlobalVariable(const std::string&);
 		bool isFunction(const std::string&);
 		bool isVariable(const std::string&,int32_t);
-		void addGlobalVariable(C0Var&);
+		void addGlobalVariable(C0Var*);
 		// void addGlobalConstant(C0Var&);
-		void addVariable(C0Var&);
-		void addFunction(C0Function&);
+		void addVariable(C0Var*);
+		void addFunction(C0Function*);
 
 		// 删除level层级的所有变量
 		void crushVar(int32_t);
@@ -233,21 +227,29 @@ namespace cc0 {
 		// 获取变量/常量
 		C0Var* getVar(const std::string&, int32_t);
 		C0Var* getGlobalVar(const std::string&);
-		// C0Var* getConst(const std::string&);
 		// 获取函数
 		C0Function* getFunc(const std::string&);
+		// 清除return树
+		// void crushReturnTree();
+		// // 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
+		// void addReturnNode();
+		// void inReturnLeaf();
+		// void outReturnLeaf();
+		// void moveReturnLeaf();
+		// bool checkReturnTree(int32_t);
+
 	private:
 		std::vector<Token> _tokens;
 		std::size_t _offset;
 		std::vector<Instruction> _instructions;
 		std::pair<uint64_t, uint64_t> _current_pos;
-
-		// for global var, not function class
-		// std::vector<cc0::C0Var> _globalConstantsTable;
 		std::vector<cc0::C0Function> _functionsTable;
 		std::vector<cc0::C0Var> _globalVariablesTable;
 		// 不包含全局常量,全局变量和函数, level from 1 ~ n-1
 		std::vector<cc0::C0Var> _variablesTable;
+
+		std::vector<bool> _returnTree;
+		int32_t _preReturnIndex;
 
 		// 下一个 token 在栈的偏移
 		int32_t _nextTokenIndex;	

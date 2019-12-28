@@ -49,7 +49,8 @@ namespace cc0 {
 		ErrInvalidStatement,		//无效表达式
 		ErrConstVoid,				// const void xxx
 		ErrExpressionNeedValue,		// 表达式需要值
-		ErrNeedMain					// 缺少main函数
+		ErrNeedMain,				// 缺少main函数
+		ErrNeedReturn
 	};
 
 	class CompilationError final{
