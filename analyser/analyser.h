@@ -230,13 +230,14 @@ namespace cc0 {
 		// 获取函数
 		C0Function* getFunc(const std::string&);
 		// 清除return树
-		// void crushReturnTree();
-		// // 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
-		// void addReturnNode();
-		// void inReturnLeaf();
-		// void outReturnLeaf();
-		// void moveReturnLeaf();
-		// bool checkReturnTree(int32_t);
+		void crushReturnTree();
+		// 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
+		void addReturnNode();
+		void inReturnLeaf();
+		void outReturnLeaf();
+		void moveReturnLeaf();
+		bool checkReturnTree(int32_t);
+		bool checkPreReturnNode();
 
 	private:
 		std::vector<Token> _tokens;

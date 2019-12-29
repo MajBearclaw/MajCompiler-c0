@@ -410,9 +410,9 @@ namespace cc0 {
 			crushVar(1);
 			current_func_index++;
 			current_func_level--;
-			// if( ! checkReturnTree(0))
-			// 	return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedReturn);
-			// crushReturnTree();
+			if( ! checkReturnTree(0))
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedReturn);
+			crushReturnTree();
 		}
 		return {};
 	}
@@ -680,31 +680,39 @@ namespace cc0 {
 		Operation tmpop;
 		auto err = analyseCondition(tmpop);
 		if (err.has_value()) return err;
+		// ')'
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBracket);
 		int32_t ifindex = _instructions.size();
 		_instructions.emplace_back(current_instruction_index++, tmpop, 0, 0);
-		// inReturnLeaf();
+		inReturnLeaf();
 		// <statement>
 		err = analyseStatement();
 		if (err.has_value()) return err;
-		_instructions[ifindex].SetX(current_instruction_index);
 		// 'else'
 		next = nextToken();
 		if( ! next.has_value() || next.value().GetType() != TokenType::ELSE){
-			// outReturnLeaf();
+			outReturnLeaf();
 			unreadToken();
 			return {};
 		}
-		// moveReturnLeaf();
-		// 设置跳出点
-		int32_t elseindex = _instructions.size();
-		_instructions.emplace_back(current_instruction_index++, Operation::JMP, 0, 0);
+		moveReturnLeaf();
+		// 设置if最后的跳出点, 如果条件分支已经有return语句，就不用jmp
+		bool needjmp = false;
+		int32_t before_else_jmp_index = _instructions.size();
+		if (!checkPreReturnNode()){
+			needjmp = true;
+			_instructions.emplace_back(current_instruction_index++, Operation::JMP, 0, 0);	
+		}
+		// 跳到else{}内部
+		_instructions[ifindex].SetX(current_instruction_index);
 		err = analyseStatement();
 		if (err.has_value()) return err;
-		_instructions[elseindex].SetX(current_instruction_index);
-		// outReturnLeaf();
+		// 设置if最后的跳出点
+		if (needjmp)
+			_instructions[before_else_jmp_index].SetX(current_instruction_index);
+		outReturnLeaf();
 		return {};
 	}
 
@@ -735,6 +743,7 @@ namespace cc0 {
 		}
 		err = analyseExpression();
 		if (err.has_value()) return err;
+		_instructions.emplace_back(current_instruction_index++, Operation::ICMP, 0, 0);	
 		return {};
 	}
 
@@ -749,6 +758,9 @@ namespace cc0 {
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::LEFT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedLeftBracket);
+		// 标记jmp类指令坐标
+		int32_t while_index = current_instruction_index;
+		// <condition>
 		Operation tmpop;
 		auto err = analyseCondition(tmpop);
 		if (err.has_value()) return err;
@@ -756,12 +768,15 @@ namespace cc0 {
 		next = nextToken();
 		if ( ! next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACKET)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedRightBracket);
-		int32_t whileindex = _instructions.size();
+		// 设置jcond跳出点
+		int32_t jcond_global_index = _instructions.size();
 		_instructions.emplace_back(current_instruction_index++, tmpop, 0, 0);
 		err = analyseStatement();
 		if (err.has_value()) return err;
-		_instructions[whileindex].SetX(current_instruction_index);
-		_instructions.emplace_back(current_instruction_index++, Operation::JMP, whileindex, 0);
+		// 设置continue点
+		_instructions.emplace_back(current_instruction_index++, Operation::JMP, while_index, 0);
+		// 设置jmp跳出点
+		_instructions[jcond_global_index].SetX(current_instruction_index);
 		return {};
 	}
 
@@ -785,7 +800,7 @@ namespace cc0 {
 		}
 		else 
 			_instructions.emplace_back(current_instruction_index++, Operation::RET, 0, 0);
-		// addReturnNode();
+		addReturnNode();
 		return {};
 	}
 
@@ -888,6 +903,12 @@ namespace cc0 {
 		C0Var * pvar = getVar(next.value().GetValueString(),current_func_level);
 		if (pvar->isConst())
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrAssignToConstant);
+		// var addr 加载指令
+		// 计算层次差
+		int32_t level_diff = 0;
+		if (pvar->getLevel() != current_func_level) 
+			level_diff = 1;
+		_instructions.emplace_back(current_instruction_index++, Operation::LOADA, level_diff, pvar->getOffset());
 		// <assignment-operator>
 		// '='
 		next = nextToken();
@@ -1081,41 +1102,46 @@ namespace cc0 {
 	}
 
 	// 清除return树
-	// void Analyser::crushReturnTree(){
-	// 	while( ! _returnTree.empty()){
-	// 		_returnTree.pop_back();
-	// 	}
-	// 	_preReturnIndex = 0;
-	// }
-	// // 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
-	// void Analyser::addReturnNode(){
-	// 	int32_t tmpsize = _returnTree.size();
-	// 	while(tmpsize<=_preReturnIndex){
-	// 		_returnTree.push_back(false);
-	// 		tmpsize++;
-	// 	}
-	// 	_returnTree[tmpsize] = true;
-	// }
-	// // returnTree生长叶子
-	// void Analyser::inReturnLeaf(){
-	// 	_preReturnIndex = _preReturnIndex*2+1;
-	// 	addReturnNode();
-	// }
-	// // 左叶子变右叶子
-	// void Analyser::moveReturnLeaf(){
-	// 	_preReturnIndex = _preReturnIndex+1;
-	// 	addReturnNode();
-	// }
-	// // 退出叶子
-	// void Analyser::outReturnLeaf(){
-	// 	_preReturnIndex = (_preReturnIndex-1)-1;
-	// }
+	void Analyser::crushReturnTree(){
+		while( ! _returnTree.empty()){
+			_returnTree.pop_back();
+		}
+		_preReturnIndex = 0;
+	}
+	// 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
+	void Analyser::addReturnNode(){
+		int32_t tmpsize = _returnTree.size();
+		while(tmpsize<=_preReturnIndex){
+			_returnTree.push_back(false);
+			tmpsize++;
+		}
+		_returnTree[_preReturnIndex] = true;
+	}
+	// returnTree生长叶子
+	void Analyser::inReturnLeaf(){
+		_preReturnIndex = _preReturnIndex*2+1;
+		addReturnNode();
+	}
+	// 左叶子变右叶子
+	void Analyser::moveReturnLeaf(){
+		_preReturnIndex = _preReturnIndex+1;
+		addReturnNode();
+	}
+	// 退出叶子
+	void Analyser::outReturnLeaf(){
+		_preReturnIndex = (_preReturnIndex-1)/2;
+	}
 
-	// bool Analyser::checkReturnTree(int32_t givenIndex){
-	// 	if ( ((int32_t)(_returnTree.size()))<=givenIndex)
-	// 		return false;
-	// 	else
-	// 		return _returnTree[givenIndex] || 
-	// 			(checkReturnTree(givenIndex*2+1) && checkReturnTree(givenIndex*2+2));
-	// }
+	bool Analyser::checkReturnTree(int32_t givenIndex){
+		if ( ((int32_t)(_returnTree.size()))<=givenIndex)
+			return false;
+		else
+			return _returnTree[givenIndex] || 
+				(checkReturnTree(givenIndex*2+1) && checkReturnTree(givenIndex*2+2));
+	}
+
+	bool Analyser::checkPreReturnNode(){
+		return _returnTree[_preReturnIndex] || 
+			(checkReturnTree(_preReturnIndex*2+1) && checkReturnTree(_preReturnIndex*2+2));
+	}
 }
