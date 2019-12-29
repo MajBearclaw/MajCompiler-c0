@@ -17,6 +17,23 @@ set(lib_src
 	analyser/analyser.h
 	analyser/analyser.cpp
 	instruction/instruction.h
+	
+	src/util/print.hpp
+    src/util/tuple_visit.hpp
+    src/util/util.hpp
+
+    src/type.h
+    src/opcode.h
+    src/instruction.h
+    src/constant.h
+    src/function.h
+    src/exception.h
+
+    src/file.h
+    src/file.cpp
+
+    src/vm.h
+    src/vm.cpp
 )
 
 set(main_src

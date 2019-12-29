@@ -78,7 +78,7 @@ namespace cc0 {
 					invalid = true;
 				else if (cc0::isdigit(ch)) // 读到的字符是数字
 				{
-					if( (char)ch == '0'){
+					if( ch == '0'){
 						current_state = DFAState::ZERO_STATE;
 					}else
 						current_state = DFAState::UNSIGNED_INTEGER_STATE; // 切换到无符号整数的状态
@@ -164,7 +164,7 @@ namespace cc0 {
 				auto ch = current_char.value();
 				if( ch == 'x' || ch == 'X'){
 					current_state = DFAState::HEX_X_STATE;
-					ss << ch;
+					ss << 'x';
 				}else if (cc0::isdigit(ch))
 					return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrFrontZero));
 				else if (cc0::isalpha(ch)){
@@ -184,7 +184,11 @@ namespace cc0 {
 				auto ch = current_char.value();
 				if (cc0::isdigit(ch) || cc0::isalpha(ch)){
 					ss << ch;
-					current_state = DFAState::HEX_DIGIT_STATE;
+					if (('G'<=ch && ch<='Z')
+					  ||('g'<=ch && ch<='z'))
+						current_state = DFAState::IDENTIFIER_STATE;
+					else
+						current_state = DFAState::HEX_DIGIT_STATE;
 				}else 
 					return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrInvalidHexInteger));
 				
@@ -196,7 +200,7 @@ namespace cc0 {
 				// 如果当前已经读到了文件尾，则解析已经读到的字符串为整数
 				if (!current_char.has_value()){
 				//     解析成功则返回无符号整数类型的token，否则返回编译错误
-					int  tmpInt;
+					int32_t  tmpInt;
 					ss >> tmpInt;	
 					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, (int32_t)tmpInt, pos, currentPos()), std::optional<CompilationError>());
 				}
@@ -214,7 +218,7 @@ namespace cc0 {
 				else {
 					unreadLast();
 				//     解析成功则返回无符号整数类型的token，否则返回编译错误
-					int tmpInt;
+					int32_t tmpInt;
 					ss >> tmpInt;
 					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, (int32_t)tmpInt, pos, currentPos()), std::optional<CompilationError>());
 				}
@@ -224,7 +228,7 @@ namespace cc0 {
 			case HEX_DIGIT_STATE: {
 				if (!current_char.has_value()){
 				//     解析成功则返回无符号整数类型的token，否则返回编译错误
-					int tmpInt;
+					int32_t tmpInt;
 					std::string str ;
 					ss >> str;
 					tmpInt = stoi(str,NULL,16); 
@@ -233,20 +237,24 @@ namespace cc0 {
 				//get the value of current_char
 				auto ch = current_char.value();
 				// 如果读到的字符是数字，则存储读到的字符
-				if (cc0::isdigit(ch) || cc0::isalpha(ch))
+				if (cc0::isdigit(ch) || cc0::isalpha(ch)){
 					ss << ch;
+					if (('G'<=ch && ch<='Z')
+					  ||('g'<=ch && ch<='z'))
+						current_state = DFAState::IDENTIFIER_STATE;
+					else	
+						current_state = DFAState::HEX_DIGIT_STATE;
+				}
 				// 如果读到的字符不是上述情况之一，则回退读到的字符，并解析已经读到的字符串为整数
 				else {
 					unreadLast();
 				//     解析成功则返回无符号整数类型的token，否则返回编译错误
-					int tmpInt;
+					int32_t tmpInt;
 					std::string str ;
 					char * offset;
-					
 					ss >> str;
-					
-					tmpInt = (int)strtol(str.c_str(),&offset,16);
-					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, (int32_t)tmpInt, pos, currentPos()), std::optional<CompilationError>());
+					tmpInt = (int32_t)strtol(str.c_str(),&offset,16);
+					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, tmpInt, pos, currentPos()), std::optional<CompilationError>());
 				}
 				break;
 			}
@@ -392,7 +400,7 @@ namespace cc0 {
 					// ss << ch;
 					// current_state = DFAState::;
 					// break;
-					return std::make_pair(std::make_optional<Token>(TokenType::NOT_EQUAL, "<=", pos, currentPos()), std::optional<CompilationError>());
+					return std::make_pair(std::make_optional<Token>(TokenType::LESS_OR_EQUAL, "<=", pos, currentPos()), std::optional<CompilationError>());
 				}
 				unreadLast();
 				return std::make_pair(std::make_optional<Token>(TokenType::LEFT_ANGLE_BRACKET, '<', pos, currentPos()), std::optional<CompilationError>());

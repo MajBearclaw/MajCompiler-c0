@@ -31,14 +31,9 @@ namespace cc0 {
 	public:
 		friend void swap(C0Var& lhs, C0Var& rhs);
 
-		// bool operator< (const C0Var&other) const{
-		// 	return this->getLevel()<other.getLevel() || 
-		// 			( this->getLevel()==other.getLevel() && this->getOffset()<other.getOffset())
-		// 		;
-		// }
-
+		////////这里强行让变量初始化，因为我未能解决函数调用它之后的函数导致的先后顺序即变量赋值和使用的顺序
 		C0Var(const std::string& name, const std::string& type, const int32_t& level, const int32_t& offset)
-			: _name(name), _type(type), _level(level), _offset(offset), _isInitialized(0), _isConst(0) {}
+			: _name(name), _type(type), _level(level), _offset(offset), _isInitialized(1), _isConst(0) {}
 		C0Var& operator=(C0Var t) { swap(*this, t); return *this; }
 
 		std::string getName() const { return _name; }

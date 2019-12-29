@@ -19,12 +19,12 @@ namespace cc0 {
 	
 	std::pair<std::vector<Instruction>, std::optional<CompilationError>> Analyser::Analyse() {
 		auto err = analyseProgram();
-		////////////////////////////////////////////
-		// if (err.has_value())
-		// 	return std::make_pair(std::vector<Instruction>(), err);
-		// else
-		// 	return std::make_pair(_instructions, std::optional<CompilationError>());
-		return std::make_pair(_instructions, err);
+		//////////
+		if (err.has_value())
+			return std::make_pair(std::vector<Instruction>(), err);
+		else
+			return std::make_pair(_instructions, std::optional<CompilationError>());
+		// return std::make_pair(_instructions, err);
 	}
 
 	// <C0-program> ::= {<variable-declaration>}{<function-definition>}
@@ -695,9 +695,10 @@ namespace cc0 {
 		if( ! next.has_value() || next.value().GetType() != TokenType::ELSE){
 			outReturnLeaf();
 			unreadToken();
+			// 跳到if{}之后
+			_instructions[ifindex].SetX(current_instruction_index);
 			return {};
 		}
-		moveReturnLeaf();
 		// 设置if最后的跳出点, 如果条件分支已经有return语句，就不用jmp
 		bool needjmp = false;
 		int32_t before_else_jmp_index = _instructions.size();
@@ -707,6 +708,9 @@ namespace cc0 {
 		}
 		// 跳到else{}内部
 		_instructions[ifindex].SetX(current_instruction_index);
+		// 移动return节点
+		moveReturnLeaf();
+		// <statement>
 		err = analyseStatement();
 		if (err.has_value()) return err;
 		// 设置if最后的跳出点
@@ -917,6 +921,8 @@ namespace cc0 {
 		// <expression>
 		auto err = analyseExpression();
 		if (err.has_value()) return err;
+		if ( ! pvar->isInitialized())
+			pvar->setInitialized();
 		_instructions.emplace_back(current_instruction_index++, Operation::ISTORE, 0, 0);
 		return {};
 	}
