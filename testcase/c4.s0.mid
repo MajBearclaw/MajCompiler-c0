@@ -1,0 +1,32 @@
+.constants:
+0 S "fun"
+1 S "main"
+.start:
+0 snew 1
+.functions:
+0 0 1 1
+1 1 0 1
+.F0:
+0 loada 0, 0
+1 iload
+2 ipush 2
+3 idiv
+4 loada 0, 0
+5 iload
+6 iprint
+7 printl
+8 loada 0, 0
+9 iload
+10 ipush 1
+11 iadd
+12 iret
+.F1:
+0 loada 1, 0
+1 ipush 7
+2 istore
+3 loada 1, 0
+4 iload
+5 call 0
+6 iprint
+7 printl
+8 ret

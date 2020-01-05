@@ -1,9 +1,13 @@
+*.zip
+*.tar
+*.docx
+*.doc
 .vs
 .vscode
 CMakeSettings.json
-*.c0
+#*.c0
 *.s0
 *.txt
 !CMakeLists.txt
 build
-testcase
+#testcase

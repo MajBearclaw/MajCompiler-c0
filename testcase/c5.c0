@@ -1,0 +1,11 @@
+int g0 = 42;
+int g1 = 105;
+
+int fun(int num) {
+    return -num;
+}
+
+int main() {
+    print( fun(-123456));
+    return fun(-123456);
+}

@@ -1,0 +1,14 @@
+int x;
+
+int fun(int num) {
+    int rtv = num/2;
+    print         (rtv);
+    return rtv+1;
+}
+
+void main() {
+    x = 7;
+    
+    print(fun(x));
+    return;
+}

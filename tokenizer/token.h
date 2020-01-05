@@ -100,7 +100,7 @@ namespace cc0 {
 			try {
 				return std::to_string(std::any_cast<int32_t>(_value));
 			}
-			/////////
+			////
 			catch (const std::bad_any_cast&) {}
 			try {
 				return std::string(std::any_cast<const char*>(_value));

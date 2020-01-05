@@ -1,0 +1,22 @@
+int ha ;
+int hey = -2;
+int get5(){
+    return 5 ;
+}
+void p(int a ){
+int digit = 0;
+const int hasage = 548;
+return ;
+}
+int main(){
+int has=234;
+int  digit   =  has;
+if (digit >0)
+{hey = -5;}
+else
+ha = 854;
+scan(digit);
+p(256);
+print(digit);
+return 0;
+}

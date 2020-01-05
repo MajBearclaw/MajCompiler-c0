@@ -19,7 +19,7 @@ namespace cc0 {
 	
 	std::pair<std::vector<Instruction>, std::optional<CompilationError>> Analyser::Analyse() {
 		auto err = analyseProgram();
-		//////////
+		//
 		if (err.has_value())
 			return std::make_pair(std::vector<Instruction>(), err);
 		else
@@ -394,16 +394,8 @@ namespace cc0 {
 			// 指令下标重置为0
 			current_instruction_index = 0;
 			_instructions.emplace_back(0, Operation::PFI, current_func_index, 0);
-			// // 参数全部放到变量表中
-			// auto paramnum = _functionsTable[current_func_index].getParamsNum();
-			// for(int i = 0;i<paramnum;i++){
-			// 	std::vector<cc0::C0Var> * paramlst = _functionsTable[current_func_index].getParamsList();
-			// 	C0Var tmpvar = (*paramlst)[i];
-			// 	tmpvar.setInitialized();
-			// 	_variablesTable.push_back(tmpvar);
-			// }
 			// 变量声明的下标从参数表长度开始
-			current_var_index = tmpfunc.getParamsNum();
+			current_var_index = _functionsTable[current_func_index].getParamsNum();
 			// <compound-statement>
 			err = analyseCompoundStatement();
 			if (err.has_value()) return err;
@@ -411,7 +403,16 @@ namespace cc0 {
 			current_func_index++;
 			current_func_level--;
 			if( ! checkReturnTree(0))
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedReturn);
+				// return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedReturn);
+			{
+				if (tmptype == "int"){
+					_instructions.emplace_back(current_instruction_index++, Operation::IPUSH, 0, 0);
+					_instructions.emplace_back(current_instruction_index++, Operation::IRET, 0, 0);
+				}
+				else {
+					_instructions.emplace_back(current_instruction_index++, Operation::RET, 0, 0);
+				}
+			}
 			crushReturnTree();
 		}
 		return {};
@@ -504,7 +505,7 @@ namespace cc0 {
 			tmpparam.setConst();
 		// 加入函数的参数表
 		_functionsTable[current_func_index].getParamsList()->push_back(tmpparam);
-		//加入局部变量表
+		// 加入局部变量表
 		addVariable(&tmpparam);
 		return {};
 	}
@@ -1116,22 +1117,25 @@ namespace cc0 {
 	}
 	// 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
 	void Analyser::addReturnNode(){
+		extendReturnTree();
+		_returnTree[_preReturnIndex] = true;
+	}
+	void Analyser::extendReturnTree(){
 		int32_t tmpsize = _returnTree.size();
 		while(tmpsize<=_preReturnIndex){
 			_returnTree.push_back(false);
 			tmpsize++;
 		}
-		_returnTree[_preReturnIndex] = true;
 	}
 	// returnTree生长叶子
 	void Analyser::inReturnLeaf(){
 		_preReturnIndex = _preReturnIndex*2+1;
-		addReturnNode();
+		extendReturnTree();
 	}
 	// 左叶子变右叶子
 	void Analyser::moveReturnLeaf(){
 		_preReturnIndex = _preReturnIndex+1;
-		addReturnNode();
+		extendReturnTree();
 	}
 	// 退出叶子
 	void Analyser::outReturnLeaf(){

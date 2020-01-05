@@ -72,18 +72,22 @@ namespace cc0 {
 
 				// 使用了自己封装的判断字符类型的函数，定义于 tokenizer/utils.hpp
 				// see https://en.cppreference.com/w/cpp/string/byte/isblank
-				if (cc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
+				// if (cc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
+				if ((9<=ch && ch<=13)||ch == 32)
 					current_state = DFAState::INITIAL_STATE; // 保留当前状态为初始状态，此处直接break也是可以的
-				else if (!cc0::isprint(ch)) // control codes and backspace
+				// else if (!cc0::isprint(ch)) // control codes and backspace
+				else if ( ! (32<=ch && ch<=126))
 					invalid = true;
-				else if (cc0::isdigit(ch)) // 读到的字符是数字
+				// else if (cc0::isdigit(ch)) // 读到的字符是数字
+				else if (48<=ch && ch<=57)
 				{
 					if( ch == '0'){
 						current_state = DFAState::ZERO_STATE;
 					}else
 						current_state = DFAState::UNSIGNED_INTEGER_STATE; // 切换到无符号整数的状态
 				}
-				else if (cc0::isalpha(ch)) // 读到的字符是英文字母
+				// else if (cc0::isalpha(ch)) // 读到的字符是英文字母
+				else if( (65<=ch&&ch<=90) || (97<=ch&&ch<=122))
 					current_state = DFAState::IDENTIFIER_STATE; // 切换到标识符的状态
 				else {
 					switch (ch) {
@@ -340,7 +344,7 @@ namespace cc0 {
 								   // 如果当前状态是加号
 			case PLUS_SIGN_STATE: {
 				// 请思考这里为什么要回退，在其他地方会不会需要
-				 ///回退是因为初始态切换到plus态的时候，通过break回到了while开头，多读了一个字符。
+				// 回退是因为初始态切换到plus态的时候，通过break回到了while开头，多读了一个字符。
 				unreadLast(); // Yes, we unread last char even if it's an EOF.
 				return std::make_pair(std::make_optional<Token>(TokenType::PLUS_SIGN, '+', pos, currentPos()), std::optional<CompilationError>());
 			}

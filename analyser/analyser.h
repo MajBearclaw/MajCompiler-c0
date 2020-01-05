@@ -31,7 +31,7 @@ namespace cc0 {
 	public:
 		friend void swap(C0Var& lhs, C0Var& rhs);
 
-		////////这里强行让变量初始化，因为我未能解决函数调用它之后的函数导致的先后顺序即变量赋值和使用的顺序
+		////这里强行让变量初始化，因为我未能解决函数调用它之后的函数导致的先后顺序即变量赋值和使用的顺序
 		C0Var(const std::string& name, const std::string& type, const int32_t& level, const int32_t& offset)
 			: _name(name), _type(type), _level(level), _offset(offset), _isInitialized(1), _isConst(0) {}
 		C0Var& operator=(C0Var t) { swap(*this, t); return *this; }
@@ -228,6 +228,7 @@ namespace cc0 {
 		void crushReturnTree();
 		// 设置returnIndex的节点为true,如果之前有元素未初始化,则初始化为false
 		void addReturnNode();
+		void extendReturnTree();
 		void inReturnLeaf();
 		void outReturnLeaf();
 		void moveReturnLeaf();

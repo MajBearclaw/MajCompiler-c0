@@ -1,0 +1,32 @@
+const int a = 0x0000ffff;
+int b = 0x000000ff;
+
+int fun(){
+    print(a,b);
+    return 0x7fffffff;
+}
+
+void pp(int a,int b){
+    print(a,b);
+    return ;
+}
+
+void swap(int a ,int b){
+    int temp = a;
+    a = b;
+    b = temp;
+    pp(a,b);
+    return ;
+}
+
+int main(){
+    int a,b;
+    scan(a);
+    scan(b);
+    pp(a,b);
+    fun();
+    swap(a,b);
+    pp(a,b);
+    fun();
+    return 0;
+}
